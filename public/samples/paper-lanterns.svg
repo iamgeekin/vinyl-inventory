@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<rect width="400" height="400" fill="#b3261e"/>
+<line x1="120" y1="0" x2="120" y2="96" stroke="#2b0d0a" stroke-width="4"/>
+<ellipse cx="120" cy="156" rx="70" ry="60" fill="#f6b13d"/>
+<line x1="286" y1="0" x2="286" y2="168" stroke="#2b0d0a" stroke-width="4"/>
+<ellipse cx="286" cy="214" rx="52" ry="46" fill="#f4d9a8"/>
+<rect x="88" y="94" width="64" height="12" fill="#2b0d0a"/>
+<rect x="88" y="208" width="64" height="12" fill="#2b0d0a"/>
+<rect x="262" y="162" width="48" height="10" fill="#2b0d0a"/>
+<rect x="262" y="256" width="48" height="10" fill="#2b0d0a"/>
+<text x="28" y="330" font-family="Georgia, serif" font-size="38" fill="#fbeed3">Paper Lanterns</text>
+<text x="28" y="362" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#fbeed3">The Quiet Harbour</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<rect width="400" height="400" fill="#24143f"/>
+<rect y="214" width="400" height="186" fill="#12081f"/>
+<path d="M200 214 L40 400 M200 214 L130 400 M200 214 L270 400 M200 214 L360 400" stroke="#e0529c" stroke-width="3" fill="none"/>
+<path d="M0 252 H400 M0 298 H400 M0 360 H400" stroke="#e0529c" stroke-width="2" fill="none"/>
+<circle cx="200" cy="214" r="78" fill="#f26d5b"/>
+<rect x="110" y="214" width="180" height="90" fill="#12081f" opacity="0.0"/>
+<text x="200" y="66" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="6" fill="#6ee7e0">HALCYON</text>
+<text x="200" y="104" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="14" fill="#6ee7e0">DRIVE</text>
+<text x="200" y="130" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" letter-spacing="4" fill="#f2c6dd">KITO MARA</text>
+</svg>

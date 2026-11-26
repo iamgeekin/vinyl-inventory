@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<rect width="400" height="400" fill="#0f2d4a"/>
+<circle cx="272" cy="124" r="62" fill="#f2e9d0"/>
+<path d="M0 226 Q50 196 100 226 T200 226 T300 226 T400 226 V400 H0Z" fill="#1d5b82"/>
+<path d="M0 272 Q50 242 100 272 T200 272 T300 272 T400 272 V400 H0Z" fill="#2f86a6"/>
+<path d="M0 320 Q50 290 100 320 T200 320 T300 320 T400 320 V400 H0Z" fill="#6fbcc4"/>
+<text x="28" y="52" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="4" fill="#f2e9d0">NIGHT TIDES</text>
+<text x="28" y="80" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="3" fill="#9fd0dc">MARINA VALE</text>
+</svg>

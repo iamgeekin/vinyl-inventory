@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<rect width="400" height="400" fill="#161616"/>
+<g fill-opacity="0.82">
+<circle cx="140" cy="150" r="76" fill="#d83a56"/>
+<circle cx="252" cy="140" r="62" fill="#f0a23a"/>
+<circle cx="208" cy="236" r="88" fill="#7a4fd0"/>
+</g>
+<path d="M140 226 V330 M252 202 V330 M208 324 V330" stroke="#e9e4da" stroke-width="3" fill="none"/>
+<line x1="40" y1="330" x2="360" y2="330" stroke="#e9e4da" stroke-width="3"/>
+<text x="40" y="372" font-family="Georgia, serif" font-size="26" fill="#e9e4da">Glass Orchard</text>
+<text x="360" y="372" text-anchor="end" font-family="Georgia, serif" font-size="15" fill="#e9e4da">June Calloway</text>
+</svg>
