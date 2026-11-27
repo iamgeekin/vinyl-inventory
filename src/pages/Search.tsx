@@ -1,7 +1,12 @@
 import { useDeferredValue, useMemo, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Cover } from '../components/Cover';
+import { SearchIcon } from '../components/Icons';
+import { LargeTitle } from '../components/NavBar';
+import { useRecordActions } from '../components/RecordMenu';
+import { SwipeRow } from '../components/SwipeRow';
 import { formatMoney } from '../data/stats';
+import { useHold } from '../gestures/useHold';
 import { normalizeText } from '../lookup/text';
 import { createSearch } from '../search';
 import { useApp } from '../state/AppContext';
@@ -35,6 +40,8 @@ const TABS = ['all', 'songs', 'albums'] as const;
 
 export function Search() {
   const { records } = useApp();
+  const hold = useHold();
+  const { openMenu } = useRecordActions();
   const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
   const tab = TABS.find((t) => t === params.get('show')) ?? 'all';
@@ -48,28 +55,33 @@ export function Search() {
 
   return (
     <div className="screen">
-      <header className="page-head stack">
-        <h1><label htmlFor="q">Search</label></h1>
-        <input
-          id="q"
-          className="search-input"
-          type="search"
-          value={query}
-          placeholder="Artist, album, song, label…"
-          autoComplete="off"
-          enterKeyHint="search"
-          onChange={(e) => set(e.target.value, tab)}
-        />
+      <LargeTitle title="Search">
+        <div className="search-field">
+          <SearchIcon />
+          <input
+            id="q"
+            type="search"
+            aria-label="Search your collection"
+            value={query}
+            placeholder="Artist, album, song, label…"
+            autoComplete="off"
+            autoCorrect="off"
+            enterKeyHint="search"
+            onChange={(e) => set(e.target.value, tab)}
+            // Return puts the keyboard away, as it does in iPhone search.
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+          />
+        </div>
         {query.trim() && (
-          <div className="chips flush" role="group" aria-label="Show">
+          <div className="segmented full" role="group" aria-label="Show">
             {TABS.map((t) => (
-              <button key={t} type="button" className="chip solid" aria-pressed={tab === t} onClick={() => set(query, t)}>
+              <button key={t} type="button" aria-pressed={tab === t} onClick={() => set(query, t)}>
                 {t[0].toUpperCase() + t.slice(1)} {counts[t]}
               </button>
             ))}
           </div>
         )}
-      </header>
+      </LargeTitle>
 
       <div className="results">
         {!query.trim() ? (
@@ -84,7 +96,13 @@ export function Search() {
           <section>
             <h2 className="section-label">Songs</h2>
             {results.songs.map(({ record, track, terms }) => (
-              <Link className="result song" key={`${record.id}-${track.position}-${track.title}`} to={`/record/${record.id}`}>
+              <Link
+                className="result song"
+                key={`${record.id}-${track.position}-${track.title}`}
+                to={`/record/${record.id}`}
+                draggable={false}
+                {...hold(() => openMenu(record))}
+              >
                 <span className="result-main">
                   <Cover record={record} alt="" />
                   <span>
@@ -105,20 +123,22 @@ export function Search() {
           <section>
             <h2 className="section-label">Albums</h2>
             {results.albums.map(({ record, terms }) => (
-              <Link className="result" key={record.id} to={`/record/${record.id}`}>
-                <span className="result-main">
-                  <Cover record={record} alt="" />
-                  <span>
-                    <span className="result-title">{highlight(record.title, terms)}</span>
-                    <span className="muted small">{highlight(record.artist, terms)}{record.year ? ` · ${record.year}` : ''}</span>
-                    <span className="muted small">
-                      {[record.edition.name || record.edition.color, record.purchase.price !== null && formatMoney(record.purchase.price, record.purchase.currency)]
-                        .filter(Boolean)
-                        .join(' · ')}
+              <SwipeRow record={record} key={record.id}>
+                <Link className="result" to={`/record/${record.id}`} draggable={false} {...hold(() => openMenu(record))}>
+                  <span className="result-main">
+                    <Cover record={record} alt="" />
+                    <span>
+                      <span className="result-title">{highlight(record.title, terms)}</span>
+                      <span className="muted small">{highlight(record.artist, terms)}{record.year ? ` · ${record.year}` : ''}</span>
+                      <span className="muted small">
+                        {[record.edition.name || record.edition.color, record.purchase.price !== null && formatMoney(record.purchase.price, record.purchase.currency)]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
                     </span>
                   </span>
-                </span>
-              </Link>
+                </Link>
+              </SwipeRow>
             ))}
           </section>
         )}

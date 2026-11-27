@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AppearancePicker } from '../components/AppearancePicker';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { NextIcon } from '../components/Icons';
+import { BackButton, NavBar } from '../components/NavBar';
 import { SyncSettings } from '../components/SyncSettings';
 import { buildBackup, parseBackup, toCsv, type Backup } from '../data/backup';
 import { sampleRecords } from '../data/sample';
@@ -76,10 +78,7 @@ export function Settings() {
 
   return (
     <div className="screen">
-      <header className="page-head">
-        <h1>Settings</h1>
-        <Link className="button" to="/">Done</Link>
-      </header>
+      <NavBar title="Settings" leading={<BackButton parent="/" />} />
       <div className="page-body">
         <p className="status" role="status">{status}</p>
 
@@ -109,15 +108,18 @@ export function Settings() {
             It stays on this device, is never synced, and is sent only to Discogs.
           </p>
           <form className="row grow" onSubmit={saveToken}>
-            <input type="password" aria-label="Discogs personal access token" autoComplete="off" value={token} onChange={(e) => setTyped(e.target.value)} />
+            <input type="password" aria-label="Discogs personal access token" placeholder="Personal token" autoComplete="off" value={token} onChange={(e) => setTyped(e.target.value)} />
             <button type="submit" className="button" disabled={typed === null}>Save</button>
           </form>
-          <Link className="button" to="/discogs">Send to Discogs</Link>
+          <Link className="disclosure" to="/discogs">
+            Send to Discogs
+            <NextIcon />
+          </Link>
         </section>
 
         <section className="card">
           <h2>Backup</h2>
-          <div className="row">
+          <div className="actions">
             <button type="button" className="button" disabled={!records.length} onClick={exportJson}>Export backup</button>
             <button type="button" className="button" disabled={!records.length} onClick={() => download(`vinyl-collection-${today}.csv`, 'text/csv', `﻿${toCsv(records)}`)}>
               Export spreadsheet (CSV)
@@ -132,7 +134,7 @@ export function Settings() {
         {repo.kind === 'local' && (
           <section className="card">
             <h2>Sample records</h2>
-            <div className="row">
+            <div className="actions">
               <button
                 type="button"
                 className="button"

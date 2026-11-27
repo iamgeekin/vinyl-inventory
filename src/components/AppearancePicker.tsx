@@ -4,8 +4,8 @@ import { useTheme } from '../theme/ThemeContext';
 
 const OPTIONS: Record<Appearance, { label: string; hint: string }> = {
   auto: { label: 'Match my phone', hint: 'Light or dark, following the phone' },
-  light: { label: 'Light', hint: 'A bright shade of the cover colour' },
-  dark: { label: 'Dark', hint: 'The cover colour, deepened' },
+  light: { label: 'Light', hint: 'The cover colours, kept light' },
+  dark: { label: 'Dark', hint: 'The cover colours, kept dark' },
   night: { label: 'Night', hint: 'Deepest shade, dimmed art, warm text' },
 };
 

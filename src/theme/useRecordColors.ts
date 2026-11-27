@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useCoverSrc } from '../components/Cover';
+import { useCover } from '../components/Cover';
 import type { VinylRecord } from '../data/types';
-import { extractColors } from './extract';
+import { sampleColors } from '../scan/thumbnail';
 import type { CoverColors } from './palette';
 
 const cache = new Map<string, Promise<CoverColors | null>>();
@@ -13,11 +13,7 @@ async function readColors(src: string): Promise<CoverColors | null> {
   image.src = src;
   try {
     await image.decode();
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = 40;
-    const context = canvas.getContext('2d', { willReadFrequently: true })!;
-    context.drawImage(image, 0, 0, 40, 40);
-    return extractColors(context.getImageData(0, 0, 40, 40).data);
+    return sampleColors(image);
   } catch {
     return null;
   }
@@ -26,31 +22,36 @@ async function readColors(src: string): Promise<CoverColors | null> {
 /**
  * The colours of a record's cover. `undefined` while they are being worked out,
  * `null` when the record has no colours to offer.
+ *
+ * They are read from the picture itself, so records saved by an older version
+ * follow the current rules without being rewritten. The colours saved with a
+ * record are used when there is no picture the browser can read.
  */
 export function useRecordColors(record: VinylRecord | undefined): CoverColors | null | undefined {
-  const saved = record?.spineColor && record.popColor ? { main: record.spineColor, pop: record.popColor } : null;
-  const src = useCoverSrc(record);
+  const saved = record?.spineColor ? { main: record.spineColor, pop: record.popColor || record.spineColor } : null;
+  const { src, loading } = useCover(record);
   const [read, setRead] = useState<{ src: string; colors: CoverColors | null }>();
-  const needsReading = Boolean(record && !saved && src);
 
   useEffect(() => {
-    if (!needsReading) return;
+    if (!src) return;
     let live = true;
     let request = cache.get(src);
     if (!request) {
-      request = readColors(src);
+      request = readColors(src).then((colors) => {
+        // A picture that could not be read, perhaps offline, is tried again later.
+        if (!colors) cache.delete(src);
+        return colors;
+      });
       cache.set(src, request);
     }
     request.then((colors) => live && setRead({ src, colors }));
     return () => {
       live = false;
     };
-  }, [needsReading, src]);
+  }, [src]);
 
   if (!record) return undefined;
-  if (saved) return saved;
-  const fallback = record.spineColor ? { main: record.spineColor, pop: record.spineColor } : null;
-  if (!src) return record.coverVersion ? undefined : fallback;
+  if (!src) return loading ? undefined : saved;
   if (read?.src !== src) return undefined;
-  return read.colors ?? fallback;
+  return read.colors ?? saved;
 }

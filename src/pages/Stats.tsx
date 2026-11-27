@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { LargeTitle } from '../components/NavBar';
 import { formatMoney, spendByCurrency, topArtists } from '../data/stats';
 import { useApp } from '../state/AppContext';
 
@@ -11,7 +12,7 @@ export function Stats() {
 
   return (
     <div className="screen">
-      <header className="page-head"><h1>Stats</h1></header>
+      <LargeTitle title="Stats" />
       <div className="page-body">
         {records.length === 0 ? (
           <div className="empty">
@@ -64,8 +65,10 @@ export function Stats() {
               <ol className="rank">
                 {topArtists(records).map((a) => (
                   <li key={a.artist}>
-                    <Link to={`/search?q=${encodeURIComponent(a.artist)}`}>{a.artist}</Link>
-                    <span className="muted">{a.count}</span>
+                    <Link to={`/search?q=${encodeURIComponent(a.artist)}`}>
+                      <span>{a.artist}</span>
+                      <span className="muted">{a.count}</span>
+                    </Link>
                   </li>
                 ))}
               </ol>

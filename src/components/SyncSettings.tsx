@@ -3,6 +3,7 @@ import { renderSVG } from 'uqr';
 import { useApp } from '../state/AppContext';
 import { formatCode } from '../sync/code';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Switch } from './Switch';
 
 const CodeScanner = lazy(() => import('../scan/CodeScanner'));
 
@@ -127,8 +128,8 @@ function Unlinked() {
           </label>
           {sync.deviceRecords > 0 && (
             <label className="check">
-              <input type="checkbox" checked={bring} onChange={(e) => setBring(e.target.checked)} />
               <span>Also add the {plural(sync.deviceRecords)} on this device</span>
+              <Switch checked={bring} onChange={(e) => setBring(e.target.checked)} />
             </label>
           )}
           <button type="submit" className="button primary" disabled={sync.busy || !code.trim()}>Link this device</button>

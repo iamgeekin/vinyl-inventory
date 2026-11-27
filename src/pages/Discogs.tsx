@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DiscogsLink } from '../components/DiscogsLink';
+import { BackButton, NavBar } from '../components/NavBar';
 import type { VinylRecord } from '../data/types';
 import { discogsCollection } from '../discogs/collection';
 import { planSync, sendMissing, type SendResult } from '../discogs/plan';
@@ -118,10 +119,7 @@ export function Discogs() {
 
   return (
     <div className="screen">
-      <header className="page-head">
-        <h1>Send to Discogs</h1>
-        <Link className="button" to="/settings">Done</Link>
-      </header>
+      <NavBar title="Send to Discogs" leading={<BackButton parent="/settings" />} />
       <div className="page-body">
         <section className="card">
           <p className="muted small">

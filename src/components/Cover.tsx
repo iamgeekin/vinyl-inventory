@@ -8,8 +8,8 @@ const cache = new Map<string, Promise<string | null>>();
 const resolve = (url: string) =>
   !url || /^(https?:|data:|blob:)/.test(url) ? url : `${import.meta.env.BASE_URL}${url}`;
 
-/** The picture to show for a record; empty while a saved thumbnail is loading. */
-export function useCoverSrc(record: VinylRecord | undefined): string {
+/** The picture to show for a record, and whether its saved thumbnail is still on the way. */
+export function useCover(record: VinylRecord | undefined): { src: string; loading: boolean } {
   const { repo } = useApp();
   const id = record?.id ?? '';
   const version = record?.coverVersion ?? 0;
@@ -33,11 +33,14 @@ export function useCoverSrc(record: VinylRecord | undefined): string {
     };
   }, [key, repo, id, version]);
 
-  if (!record) return '';
-  if (!version) return resolve(record.links.coverUrl);
-  if (stored?.key !== key) return '';
-  return stored.src ?? resolve(record.links.coverUrl);
+  if (!record) return { src: '', loading: false };
+  if (!version) return { src: resolve(record.links.coverUrl), loading: false };
+  if (stored?.key !== key) return { src: '', loading: true };
+  return { src: stored.src ?? resolve(record.links.coverUrl), loading: false };
 }
+
+/** The picture to show for a record; empty while a saved thumbnail is loading. */
+export const useCoverSrc = (record: VinylRecord | undefined): string => useCover(record).src;
 
 interface ImageProps {
   src: string;

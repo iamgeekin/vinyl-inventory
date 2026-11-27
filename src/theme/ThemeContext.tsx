@@ -37,7 +37,7 @@ function remembered(): { appearance: Appearance; colors: CoverColors } {
 
 const CSS_NAMES: Record<keyof Theme, string> = {
   bg: '--bg', surface: '--surface', line: '--line', lineStrong: '--line-strong', text: '--text', muted: '--muted',
-  accent: '--accent', accentInk: '--accent-ink', glow: '--glow', danger: '--danger', art: '--art',
+  accent: '--accent', fill: '--fill', fillInk: '--fill-ink', glow: '--glow', danger: '--danger', art: '--art',
 };
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { discColor, grooves } from '../components/colors';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Cover } from '../components/Cover';
-import { BackIcon } from '../components/Icons';
+import { BackButton } from '../components/NavBar';
 import { Tracklist } from '../components/Tracklist';
 import { formatDate, formatMoney } from '../data/stats';
 import { useApp } from '../state/AppContext';
@@ -61,18 +61,16 @@ export function RecordDetail() {
       <div className="hero">
         <div className="disc" style={{ background: grooves(disc) }} aria-hidden="true" />
         <Cover record={record} />
-        <button type="button" className="back" aria-label="Back" onClick={() => (history.state?.idx > 0 ? navigate(-1) : navigate('/'))}>
-          <BackIcon />
-        </button>
+        <div className="hero-bar">
+          <BackButton parent="/" />
+          <Link className="button" to={`/record/${record.id}/edit`}>Edit</Link>
+        </div>
       </div>
 
       <div className="detail-body">
-        <div className="title-row">
-          <div>
-            <h1>{record.title}</h1>
-            <p className="muted">{[record.artist, record.year, format.size && `${format.size}`].filter(Boolean).join(' · ')}</p>
-          </div>
-          <Link className="button" to={`/record/${record.id}/edit`}>Edit</Link>
+        <div className="title-block">
+          <h1>{record.title}</h1>
+          <p className="muted">{[record.artist, record.year, format.size && `${format.size}`].filter(Boolean).join(' · ')}</p>
         </div>
 
         {(edition.isSpecial || editionLine) && (

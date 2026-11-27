@@ -127,18 +127,42 @@ The "Listening Room" direction: a quiet interface where the cover art provides t
 
 ### Colour from the cover
 
-The whole page takes its colour from the cover of the record in focus: the one pulled out on the shelf, centred in the slider, or open on its own page. Other screens keep the last one.
+The page takes two colours from the cover of the record in focus: the one pulled out on the shelf, centred in the slider, or open on its own page. Other screens keep the last one.
+
+- **Primary:** the colour covering most of the cover fills the page. A colour wins over black, white or grey when they cover about as much.
+- **Secondary:** the most prominent clearly different colour marks buttons, the selected tab, the shelf ledge, the disc label and the glow behind the artwork.
 
 | Appearance | What it does |
 |---|---|
 | Match my phone (default) | Light or dark, following the phone |
-| Light | A bright shade of the cover colour |
-| Dark | The cover colour, deepened |
-| Night | The deepest shade, with dimmed artwork and warm text |
+| Light | The primary colour, lightened only if it is too dark for a light page |
+| Dark | The primary colour, darkened only if it is too light for a dark page |
+| Night | The deepest shade, with a dimmed secondary colour and artwork, and warm text |
 
-Change it with the sun or moon button on the shelf, or under **Settings**. Text and highlight colours are adjusted until they pass a contrast of at least 4.5 to 1. A black, white or grey cover borrows its tint from its second colour. A cover that is only linked from Discogs cannot be analysed, so the page stays neutral until you save artwork or a photo.
+Change it with the sun or moon button on the shelf, or under **Settings**. A change of lightness keeps the hue. Filled shapes show the secondary colour as it is (dimmed at night). Where it is used for text and outlines, it is lightened or darkened until it passes a contrast of at least 4.5 to 1, as all text is. A black, white or grey cover gives a black, white or grey page, with its second colour as the highlight.
 
-The colour rules are in `src/theme/palette.ts`.
+Colours are read from the picture each time, so records saved by an earlier version follow these rules without being changed. A record's spine keeps its saved colour until you edit and save the record. A cover that is only linked from Discogs cannot be analysed, so the page uses the record's saved colours, or stays neutral until you save artwork or a photo.
+
+Colours are read by `src/theme/extract.ts`; the page rules are in `src/theme/palette.ts`.
+
+### On iPhone
+
+The app follows iPhone conventions without changing the look above:
+
+- A floating tab bar holds Shelf, Add and Stats, with Search as its own button. Each tab returns to what it was showing, and tapping the current tab scrolls to the top.
+- Large titles shrink into a bar as you scroll. Settings and record pages have a round back button, and the add and edit form has **Cancel** and **Save** at the top.
+- Lists and forms are grouped rows, with switches for on and off settings and centred alerts before anything is deleted.
+- Text follows the iPhone text size setting. Add the app to the Home Screen to run it without Safari's bars.
+
+| Gesture | Where | What it does |
+|---|---|---|
+| Swipe sideways | The large cover on the spine shelf | Next or previous record |
+| Slide a finger along | A row of spines | Pulls out each record it passes |
+| Press and hold | A spine, cover or search result | Menu to open, edit or delete |
+| Swipe left | An album in search results | Shows **Edit** and **Delete** |
+| Pull down from the top | The add or edit form | Closes it, asking first if you changed anything |
+
+Everything a gesture does can also be done with buttons. Going back is the phone's own swipe from the screen edge. With a mouse, a right click opens the press-and-hold menu.
 
 ### Sideways view
 

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GearIcon } from '../components/Icons';
 import { ModeButton } from '../components/ModeButton';
+import { LargeTitle } from '../components/NavBar';
 import { CoverShelf } from '../components/shelf/CoverShelf';
 import { CoverSlider } from '../components/shelf/CoverSlider';
 import { SpineShelf } from '../components/shelf/SpineShelf';
@@ -51,31 +52,31 @@ export function Shelf() {
 
   return (
     <div className="screen shelf-screen">
-      <header className="page-head">
-        <h1>
-          Collection <span className="muted">{ready ? records.length : ''}</span>
-        </h1>
-        <div className="head-actions">
-          <div className="segmented" role="group" aria-label="Shelf view">
-            {(['spines', 'covers'] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={settings.shelfView === v}
-                onClick={() => saveSettings({ shelfView: v })}
-              >
-                {v === 'spines' ? 'Spines' : 'Covers'}
-              </button>
-            ))}
-          </div>
-          <ModeButton />
-        </div>
-      </header>
+      <LargeTitle
+        title={<>Collection <span className="muted">{ready ? records.length : ''}</span></>}
+        actions={
+          <>
+            <ModeButton />
+            <Link className="round-button" to="/settings" aria-label="Settings">
+              <GearIcon />
+            </Link>
+          </>
+        }
+      />
 
       <div className="chips">
-        <Link className="chip chip-icon" to="/settings" aria-label="Settings">
-          <GearIcon />
-        </Link>
+        <div className="segmented" role="group" aria-label="Shelf view">
+          {(['spines', 'covers'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={settings.shelfView === v}
+              onClick={() => saveSettings({ shelfView: v })}
+            >
+              {v === 'spines' ? 'Spines' : 'Covers'}
+            </button>
+          ))}
+        </div>
         {records.length > 0 && (
           <>
             <select

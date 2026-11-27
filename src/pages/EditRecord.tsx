@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { CoverImage, useCoverSrc } from '../components/Cover';
+import { NavBar } from '../components/NavBar';
+import { Switch } from '../components/Switch';
 import type { CoverChange } from '../data/repository';
 import { formatTracks, parseTracks } from '../data/trackText';
 import { CURRENCIES, emptyRecord, GRADES, type Grade, type VinylRecord } from '../data/types';
+import { useSwipeDown } from '../gestures/useSwipeDown';
 import { findOwned } from '../lookup/lookup';
 import { findArtwork } from '../scan/artwork';
 import { makeThumbnail, type Thumbnail } from '../scan/thumbnail';
@@ -62,14 +66,19 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
   const [trackText, setTrackText] = useState(() => formatTracks(initial.tracklist));
   const [cover, setCover] = useState<CoverChange>(undefined);
   const [colors, setColors] = useState({ spineColor: initial.spineColor, popColor: initial.popColor });
-  const { spineColor, popColor } = colors;
   const [coverStatus, setCoverStatus] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Whether anything has been changed by hand, which closing the form would lose.
+  const [changed, setChanged] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const storedSrc = useCoverSrc(initial);
   const abort = useRef<AbortController | null>(null);
   const initialColors = useRecordColors(isNew ? undefined : initial);
-  // Follows a newly chosen cover; otherwise the colours the record already had.
+  // An unchanged cover is read again, so saving replaces colours from an older version.
+  const { spineColor, popColor } =
+    cover === undefined && initialColors ? { spineColor: initialColors.main, popColor: initialColors.pop } : colors;
+  // Follows a newly chosen cover; otherwise the colours of the one the record already had.
   useCoverTheme(spineColor && popColor ? { main: spineColor, pop: popColor } : (initialColors ?? undefined));
 
   const patch = (change: Partial<VinylRecord>) => setRecord((r) => ({ ...r, ...change }));
@@ -120,6 +129,10 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
 
   const owned = record.title && record.artist ? findOwned(records, record) : [];
 
+  const leave = () => (history.state?.idx > 0 ? navigate(-1) : navigate('/', { replace: true }));
+  const cancel = () => (changed ? setDiscarding(true) : leave());
+  const sheet = useSwipeDown(cancel);
+
   const save = async (event: FormEvent) => {
     event.preventDefault();
     const value = price.trim() === '' ? null : Number(price.replace(',', '.'));
@@ -152,11 +165,18 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
   const currencies = [...new Set([record.purchase.currency, settings.currency, ...CURRENCIES])];
 
   return (
-    <form className="screen form" onSubmit={save} noValidate>
-      <header className="page-head">
-        <h1>{isNew ? 'Add record' : 'Edit record'}</h1>
-        <button type="button" className="button" onClick={() => navigate(-1)}>Cancel</button>
-      </header>
+    <form ref={sheet} className="screen form" onSubmit={save} onChange={() => setChanged(true)} noValidate>
+      <NavBar
+        title={isNew ? 'Add record' : 'Edit record'}
+        leading={<button type="button" className="button" onClick={cancel}>Cancel</button>}
+        trailing={
+          <button type="submit" className="button primary" disabled={saving}>
+            {saving ? 'Saving…' : isNew ? 'Add' : 'Save'}
+          </button>
+        }
+      >
+        {error && <p className="error" role="alert">{error}</p>}
+      </NavBar>
 
       {owned.length > 0 && isNew && (
         <p className="notice" role="status">
@@ -172,13 +192,13 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
             <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} />
           </label>
           {photo && cover !== photo.dataUrl && (
-            <button type="button" className="button" onClick={() => applyThumbnail(photo)}>Use my scan photo</button>
+            <button type="button" className="button" onClick={() => { setChanged(true); applyThumbnail(photo); }}>Use my scan photo</button>
           )}
-          <button type="button" className="button" disabled={!record.title || !record.artist} onClick={searchArtwork}>
+          <button type="button" className="button" disabled={!record.title || !record.artist} onClick={() => { setChanged(true); searchArtwork(); }}>
             Find artwork online
           </button>
           {(cover || (cover === undefined && record.coverVersion > 0)) && (
-            <button type="button" className="button" onClick={() => { abort.current?.abort(); setCover(null); setColors({ spineColor: '', popColor: '' }); setCoverStatus(''); }}>
+            <button type="button" className="button" onClick={() => { setChanged(true); abort.current?.abort(); setCover(null); setColors({ spineColor: '', popColor: '' }); setCoverStatus(''); }}>
               Remove saved cover
             </button>
           )}
@@ -200,7 +220,7 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
           <input type="date" value={record.purchase.date} onChange={(e) => patchIn('purchase', { date: e.target.value })} />
         </Field>
         <Field label="Store">
-          <input value={record.purchase.store} onChange={(e) => patchIn('purchase', { store: e.target.value })} />
+          <input autoCapitalize="words" value={record.purchase.store} onChange={(e) => patchIn('purchase', { store: e.target.value })} />
         </Field>
         <Field label="Media condition">
           <select value={record.condition.media} onChange={(e) => patchIn('condition', { media: e.target.value as Grade })}>
@@ -216,8 +236,8 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
 
       <fieldset>
         <legend>Album</legend>
-        <Field label="Artist" wide><input required value={record.artist} onChange={(e) => patch({ artist: e.target.value })} /></Field>
-        <Field label="Album title" wide><input required value={record.title} onChange={(e) => patch({ title: e.target.value })} /></Field>
+        <Field label="Artist" wide><input required autoCapitalize="words" value={record.artist} onChange={(e) => patch({ artist: e.target.value })} /></Field>
+        <Field label="Album title" wide><input required autoCapitalize="words" value={record.title} onChange={(e) => patch({ title: e.target.value })} /></Field>
         <Field label="Release year">
           <input inputMode="numeric" maxLength={4} value={record.year ?? ''} onChange={(e) => patch({ year: Number(e.target.value.replace(/\D/g, '')) || null })} />
         </Field>
@@ -225,14 +245,14 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
         <Field label="Label"><input value={record.label} onChange={(e) => patch({ label: e.target.value })} /></Field>
         <Field label="Catalogue number"><input value={record.catalogNumber} onChange={(e) => patch({ catalogNumber: e.target.value })} /></Field>
         <Field label="Barcode" wide><input inputMode="numeric" value={record.barcode} onChange={(e) => patch({ barcode: e.target.value })} /></Field>
-        <Field label="Genres (comma separated)" wide><input value={genres} onChange={(e) => setGenres(e.target.value)} /></Field>
+        <Field label="Genres" wide><input placeholder="Comma separated" value={genres} onChange={(e) => setGenres(e.target.value)} /></Field>
       </fieldset>
 
       <fieldset>
         <legend>Edition and pressing</legend>
         <label className="check wide">
-          <input type="checkbox" checked={record.edition.isSpecial} onChange={(e) => patchIn('edition', { isSpecial: e.target.checked })} />
           <span>Special edition</span>
+          <Switch checked={record.edition.isSpecial} onChange={(e) => patchIn('edition', { isSpecial: e.target.checked })} />
         </label>
         <Field label="Edition name" wide><input value={record.edition.name} onChange={(e) => patchIn('edition', { name: e.target.value })} /></Field>
         <Field label="Vinyl colour"><input value={record.edition.color} placeholder="Black" onChange={(e) => patchIn('edition', { color: e.target.value })} /></Field>
@@ -265,16 +285,21 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
             {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} out of 5</option>)}
           </select>
         </Field>
-        <Field label="Tags (comma separated)"><input value={tags} onChange={(e) => setTags(e.target.value)} /></Field>
+        <Field label="Tags"><input placeholder="Comma separated" autoCapitalize="off" value={tags} onChange={(e) => setTags(e.target.value)} /></Field>
         <Field label="Notes" wide><textarea rows={3} value={record.notes} onChange={(e) => patch({ notes: e.target.value })} /></Field>
       </fieldset>
 
-      <div className="save-bar">
-        {error && <p className="error" role="alert">{error}</p>}
-        <button type="submit" className="button primary wide" disabled={saving}>
-          {saving ? 'Saving…' : isNew ? 'Add to shelf' : 'Save changes'}
-        </button>
-      </div>
+      {discarding && (
+        <ConfirmDialog
+          title="Discard changes?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          onCancel={() => setDiscarding(false)}
+          onConfirm={leave}
+        >
+          What you changed here has not been saved.
+        </ConfirmDialog>
+      )}
     </form>
   );
 }

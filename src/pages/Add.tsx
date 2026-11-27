@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { BarcodeTab } from '../components/add/BarcodeTab';
 import { PhotoTab } from '../components/add/PhotoTab';
 import { TypeTab } from '../components/add/TypeTab';
+import { LargeTitle } from '../components/NavBar';
 
 const MODES = [
   { key: 'barcode', label: 'Barcode', Panel: BarcodeTab },
@@ -15,8 +16,7 @@ export function Add() {
 
   return (
     <div className="screen">
-      <header className="page-head stack">
-        <h1>Add a record</h1>
+      <LargeTitle title="Add a record">
         <div className="segmented full" role="group" aria-label="How to find it">
           {MODES.map((m) => (
             <button key={m.key} type="button" aria-pressed={m === mode} onClick={() => setParams({ mode: m.key }, { replace: true })}>
@@ -24,7 +24,7 @@ export function Add() {
             </button>
           ))}
         </div>
-      </header>
+      </LargeTitle>
       <div className="page-body">
         <mode.Panel />
         <p className="manual"><Link to="/new">Or enter every detail yourself</Link></p>

@@ -3,7 +3,7 @@ import { clampIndex, coverSizeFor, dragSteps, placement } from '../src/component
 import { sampleRecords } from '../src/data/sample';
 import { sortMark } from '../src/data/sort';
 import { normalizeRecord } from '../src/data/types';
-import { contrast, fromHsl, luminance, toHex, toHsl } from '../src/theme/color';
+import { contrast, fromOklch, luminance, rgb, toHex, toOklch } from '../src/theme/color';
 import { extractColors } from '../src/theme/extract';
 import { MODES, nextMode, resolveMode, themeFor, type CoverColors, type Theme } from '../src/theme/palette';
 
@@ -15,9 +15,20 @@ const pairs = (t: Theme) => ({
   mutedOnCard: contrast(t.muted, t.surface),
   accentOnPage: contrast(t.accent, t.bg),
   accentOnCard: contrast(t.accent, t.surface),
-  buttonLabel: contrast(t.accentInk, t.accent),
+  buttonLabel: contrast(t.fillInk, t.fill),
   dangerOnPage: contrast(t.danger, t.bg),
+  dangerOnCard: contrast(t.danger, t.surface),
 });
+
+/** Degrees between the hues of two colours. */
+const hueGap = (a: string, b: string) => {
+  const turn = Math.abs(toOklch(a)[2] - toOklch(b)[2]);
+  return (Math.min(turn, 2 * Math.PI - turn) * 180) / Math.PI;
+};
+
+/** RGBA pixels holding each colour the given number of times. */
+const paint = (colours: [string, number][]) =>
+  new Uint8ClampedArray(colours.flatMap(([hex, count]) => Array.from({ length: count }, () => [...rgb(hex), 255]).flat()));
 
 /** A repeatable spread of colour pairs, including the extremes. */
 function manyCovers(): CoverColors[] {
@@ -44,46 +55,66 @@ describe('cover colours', () => {
     expect(failures).toEqual([]);
   });
 
-  it('tint the whole page with the cover colour, and only change how light it is', () => {
+  it('fill the page with the main cover colour and highlight with the second', () => {
     const cover = { main: '#b3261e', pop: '#f6b13d' };
     const [light, dark, night] = MODES.map((mode) => themeFor(cover, mode));
     for (const theme of [light, dark, night]) {
-      const [hue, saturation] = toHsl(theme.bg);
-      expect(Math.min(hue, 360 - hue)).toBeLessThan(8);
-      expect(saturation).toBeGreaterThan(0.5);
+      expect(hueGap(theme.bg, cover.main)).toBeLessThan(6);
+      expect(toOklch(theme.bg)[1]).toBeGreaterThan(0.08);
+      expect(hueGap(theme.accent, cover.pop)).toBeLessThan(12);
     }
     expect(luminance(light.bg)).toBeGreaterThan(luminance(dark.bg));
     expect(luminance(dark.bg)).toBeGreaterThan(luminance(night.bg));
     expect(night.art).toContain('brightness');
   });
 
-  it('give a black cover the hue of its second colour', () => {
-    const [hue] = toHsl(themeFor({ main: '#161616', pop: '#9a6fe8' }, 'dark').bg);
-    expect(hue).toBeGreaterThan(240);
-    expect(hue).toBeLessThan(290);
+  it('use the cover colours exactly where the mode allows it', () => {
+    const navy = themeFor({ main: '#0f2d4a', pop: '#f1c84b' }, 'dark');
+    expect(navy).toMatchObject({ bg: '#0f2d4a', fill: '#f1c84b', accent: '#f1c84b', glow: '#f1c84b' });
+    const cream = themeFor({ main: '#e9e2cf', pop: '#7a2e1d' }, 'light');
+    expect(cream).toMatchObject({ bg: '#e9e2cf', fill: '#7a2e1d', accent: '#7a2e1d' });
+    for (const mode of ['light', 'dark'] as const) {
+      expect(themeFor({ main: '#b3261e', pop: '#9a6fe8' }, mode).fill).toBe('#9a6fe8');
+    }
   });
 
-  it('leave a black and white cover grey', () => {
-    expect(toHsl(themeFor({ main: '#ffffff', pop: '#000000' }, 'dark').bg)[1]).toBeLessThan(0.1);
-  });
-
-  it('round-trips through hue, saturation and lightness', () => {
-    expect(fromHsl(...toHsl('#2f86a6'))).toBe('#2f86a6');
-  });
-
-  it('finds the main colour and a vivid second one', () => {
-    const paint = (colours: [string, number][]) => {
-      const data: number[] = [];
-      for (const [hex, count] of colours) {
-        for (let i = 0; i < count; i++) {
-          data.push(parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16), 255);
-        }
+  it('keep a black, white or grey cover neutral, with its second colour as the highlight', () => {
+    for (const main of ['#161616', '#f4f4f4', '#808080']) {
+      for (const mode of MODES) {
+        const theme = themeFor({ main, pop: '#9a6fe8' }, mode);
+        expect(toOklch(theme.bg)[1]).toBeLessThan(0.005);
+        expect(hueGap(theme.accent, '#9a6fe8')).toBeLessThan(12);
       }
-      return new Uint8ClampedArray(data);
-    };
+    }
+    expect(themeFor({ main: '#161616', pop: '#9a6fe8' }, 'dark').bg).toBe('#161616');
+  });
+
+  it('round-trips through lightness, chroma and hue', () => {
+    for (const hex of ['#2f86a6', '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff']) {
+      expect(fromOklch(...toOklch(hex))).toBe(hex);
+    }
+  });
+
+  it('reads the main colour and a vivid second one', () => {
     expect(extractColors(paint([['#102040', 700], ['#909090', 200], ['#f6b13d', 100]]))).toEqual({ main: '#102040', pop: '#f6b13d' });
     expect(extractColors(paint([['#445566', 100]]))).toEqual({ main: '#445566', pop: '#445566' });
     expect(extractColors(new Uint8ClampedArray(0)).main).toMatch(/^#/);
+  });
+
+  it('counts close shades as one colour', () => {
+    // Three nearly equal blues outweigh a red that is larger than any one of them.
+    const { main, pop } = extractColors(paint([['#b3261e', 40], ['#1d5b82', 25], ['#21608a', 20], ['#1a5578', 15]]));
+    expect(hueGap(main, '#1d5b82')).toBeLessThan(5);
+    expect(pop).toBe('#b3261e');
+  });
+
+  it('prefers a colour to black that covers only a little more', () => {
+    expect(extractColors(paint([['#000000', 52], ['#b3261e', 48]])).main).toBe('#b3261e');
+    expect(extractColors(paint([['#000000', 75], ['#b3261e', 25]]))).toEqual({ main: '#000000', pop: '#b3261e' });
+  });
+
+  it('passes over specks when there is a larger second colour', () => {
+    expect(extractColors(paint([['#e9e2cf', 900], ['#2f5d73', 90], ['#ff00ff', 10]])).pop).toBe('#2f5d73');
   });
 
   it('follows the phone only when set to match it', () => {

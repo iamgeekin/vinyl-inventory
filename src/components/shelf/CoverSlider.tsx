@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { SHORT_SORT_LABELS, sortMark } from '../../data/sort';
 import { formatMoney } from '../../data/stats';
 import type { SortKey, VinylRecord } from '../../data/types';
+import { useHold } from '../../gestures/useHold';
 import { discColor, grooves } from '../colors';
 import { Cover } from '../Cover';
 import { NextIcon, PreviousIcon } from '../Icons';
 import { ModeButton } from '../ModeButton';
+import { useRecordActions } from '../RecordMenu';
 import { clampIndex, coverSizeFor, dragSteps, placement, REACH } from './slider';
 
 function useSize() {
@@ -36,6 +38,8 @@ interface Props {
 /** The sideways view: one record enlarged in the middle, the rest to swipe through. */
 export function CoverSlider({ records, selectedId, onSelect, sort, onSort, filtered, onClearFilters }: Props) {
   const navigate = useNavigate();
+  const hold = useHold();
+  const { openMenu } = useRecordActions();
   const [stageRef, stage] = useSize();
   const size = coverSizeFor(stage.width, stage.height);
   const index = Math.max(0, records.findIndex((r) => r.id === selectedId));
@@ -149,6 +153,7 @@ export function CoverSlider({ records, selectedId, onSelect, sort, onSort, filte
                 className="slide-cover"
                 tabIndex={focused ? 0 : -1}
                 aria-label={`${focused ? 'Open' : 'Show'} ${r.title} by ${r.artist}`}
+                {...hold(() => openMenu(r))}
                 onClick={() => (focused ? open() : onSelect(r.id))}
               >
                 <Cover record={r} alt="" />

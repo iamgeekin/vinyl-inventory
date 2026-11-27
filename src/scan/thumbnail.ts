@@ -1,4 +1,5 @@
-import { extractColors } from '../theme/extract';
+import { extractColors, SAMPLE_SIZE } from '../theme/extract';
+import type { CoverColors } from '../theme/palette';
 
 const SIZE = 400;
 const MAX_BYTES = 100 * 1024;
@@ -11,15 +12,23 @@ export interface Thumbnail {
 }
 
 /** Draws the centre square of an image onto a canvas of the given size. */
-export function squareCanvas(image: ImageBitmap, size: number): HTMLCanvasElement {
+export function squareCanvas(image: ImageBitmap | HTMLImageElement, size: number, smooth = true): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const context = canvas.getContext('2d', { willReadFrequently: true });
   if (!context) throw new Error('This browser cannot process images.');
   const side = Math.min(image.width, image.height);
+  context.imageSmoothingEnabled = smooth;
   context.imageSmoothingQuality = 'high';
   context.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, size, size);
   return canvas;
+}
+
+/** The two colours of a cover. Throws if the browser may not read the picture. */
+export function sampleColors(image: ImageBitmap | HTMLImageElement): CoverColors {
+  // Picks pixels rather than blending them, so no colour appears that the cover does not have.
+  const context = squareCanvas(image, SAMPLE_SIZE, false).getContext('2d')!;
+  return extractColors(context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE).data);
 }
 
 export async function makeThumbnail(source: Blob): Promise<Thumbnail> {
@@ -30,7 +39,7 @@ export async function makeThumbnail(source: Blob): Promise<Thumbnail> {
     throw new Error('That file could not be read as an image.');
   }
   const canvas = squareCanvas(bitmap, Math.min(SIZE, Math.max(1, Math.min(bitmap.width, bitmap.height))));
-  const small = squareCanvas(bitmap, 40);
+  const { main, pop } = sampleColors(bitmap);
   bitmap.close();
   let quality = 0.86;
   let dataUrl = canvas.toDataURL('image/jpeg', quality);
@@ -38,8 +47,6 @@ export async function makeThumbnail(source: Blob): Promise<Thumbnail> {
     quality -= 0.1;
     dataUrl = canvas.toDataURL('image/jpeg', quality);
   }
-  const pixels = small.getContext('2d')!.getImageData(0, 0, 40, 40).data;
-  const { main, pop } = extractColors(pixels);
   return { dataUrl, spineColor: main, popColor: pop };
 }
 
