@@ -177,6 +177,8 @@ Everything a gesture does can also be done with buttons. Going back is the phone
 
 Turn a phone to landscape on the shelf to get the cover slider: the focused record is enlarged with its disc slid out. Swipe, tap a side cover, use the arrows or drag the bar underneath, and sort by artist, title, year, purchase date or price. The phone's rotation lock must be off. It appears when the screen is landscape and no more than 540 px tall.
 
+A record's page has a sideways layout too, under the same condition. The back button, **Edit**, the cover with its disc slid out, and the title and edition stay on the left, so the record you opened is always in view. The purchase tiles, tracklist, notes and details scroll on the right.
+
 ## Project layout
 
 | Folder | Contents |
