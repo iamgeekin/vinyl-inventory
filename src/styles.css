@@ -284,6 +284,27 @@ mark { background: transparent; color: var(--accent); }
 .details > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 44px; padding: 0.5rem 0; border-bottom: 0.5px solid var(--line-strong); font-size: 0.9375rem; }
 .details dd { text-align: right; }
 
+/*
+ * A phone held sideways: the record stays on the left (Back, Edit, cover with its disc
+ * slid out as on the slider, title) and everything else scrolls beside it.
+ */
+.app:has(.detail.sideways) { max-width: none; }
+.detail.sideways { display: flex; flex-direction: row; overflow: hidden; padding-bottom: 0; }
+/* Wide enough for the cover plus the disc sliding out from behind it. */
+.detail-side { --sleeve: clamp(112px, calc(100dvh - 214px), 180px); display: flex; flex: 0 0 clamp(240px, 38%, 300px); flex-direction: column; min-width: 0; padding: 12px 0.875rem calc(1rem + env(safe-area-inset-bottom)) 0; overflow-y: auto; scrollbar-width: none; overflow-wrap: anywhere; }
+.detail-side::-webkit-scrollbar { display: none; }
+.detail-side .hero-bar { position: static; flex-shrink: 0; pointer-events: auto; }
+/* Not over artwork here, so the buttons take the card colour. */
+.detail-side .hero-bar > * { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.detail-side .hero { flex: none; width: var(--sleeve); height: var(--sleeve); margin: 12px 0 0 6px; overflow: visible; background: none; }
+/* The glow stops short of the title, so it never changes what the text is read against. */
+.detail-side .hero::before { content: ''; position: absolute; inset: -16% -40%; background: radial-gradient(closest-side, var(--glow), transparent); opacity: 0.5; pointer-events: none; }
+.detail-side .hero > .cover { width: 100%; height: 100%; border-radius: 4px; box-shadow: 0 8px 20px rgb(0 0 0 / 0.35); }
+.detail-side .disc { top: 3%; left: 3%; height: 94%; transform: translateX(40%); }
+.detail-heading { position: relative; display: flex; flex-direction: column; gap: 0.25rem; margin-top: 1.25rem; }
+.detail-heading .title-block h1 { font-size: 1.5rem; }
+.detail.sideways .detail-body { flex: 1; min-width: 0; min-height: 0; gap: 0.625rem; padding: 12px 0.25rem calc(1.25rem + env(safe-area-inset-bottom)) 0.25rem; overflow-y: auto; overscroll-behavior: contain; }
+
 /* ---------- Form ---------- */
 .form { display: flex; flex-direction: column; gap: 1rem; padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 .form > * { flex-shrink: 0; }
