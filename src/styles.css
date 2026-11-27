@@ -184,6 +184,9 @@ mark { background: transparent; color: var(--accent); }
 .detail-body { display: flex; flex-direction: column; gap: 0.875rem; padding: 1rem 1.25rem calc(2rem + env(safe-area-inset-bottom)); overflow-wrap: anywhere; }
 .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
 .title-row h1 { font-size: 2rem; }
+.title-row > div { min-width: 0; }
+/* A long album title must not squeeze the button until its label breaks. */
+.title-row > .button { flex-shrink: 0; overflow-wrap: normal; }
 .edition { display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-size: 0.875rem; font-weight: 600; }
 .swatch { flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); }
 .tiles { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -193,6 +196,17 @@ mark { background: transparent; color: var(--accent); }
 .side h2 { margin: 0.5rem 0 0.25rem; }
 .side li { display: flex; gap: 0.75rem; align-items: center; min-height: 40px; padding: 0.375rem 0; border-bottom: 1px solid var(--line); }
 .pos { min-width: 1.75rem; font-size: 0.8125rem; }
+.tracklist, .previews { display: flex; flex-direction: column; gap: 0.25rem; }
+.listen { display: flex; flex-wrap: wrap; column-gap: 1.25rem; }
+.listen a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+.play { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--line-strong); border-radius: 50%; background: transparent; color: var(--accent); }
+.play svg { width: 18px; height: 18px; }
+.play[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.play.find { border-style: dashed; color: var(--muted); }
+.side li { position: relative; }
+/* How far through the clip is, drawn along the bottom of the playing row. */
+.side li.is-active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--accent); transform: scaleX(var(--progress, 0)); transform-origin: left; transition: transform 0.25s linear; }
+.playing-from { display: block; }
 .track-title { flex: 1; min-width: 0; }
 .notes { white-space: pre-wrap; }
 .details > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.9375rem; }

@@ -4,8 +4,8 @@ import { discColor, grooves } from '../components/colors';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Cover } from '../components/Cover';
 import { BackIcon } from '../components/Icons';
+import { Tracklist } from '../components/Tracklist';
 import { formatDate, formatMoney } from '../data/stats';
-import { groupBySide } from '../data/trackText';
 import { useApp } from '../state/AppContext';
 import { writeShelfState } from '../state/shelfState';
 import { useCoverTheme } from '../theme/ThemeContext';
@@ -89,23 +89,8 @@ export function RecordDetail() {
         </dl>
 
         {record.tracklist.length > 0 ? (
-          groupBySide(record.tracklist).map((group, i) => (
-            <section key={i} className="side">
-              <h2>{group.side}</h2>
-              <ol>
-                {group.tracks.map((t, n) => (
-                  <li key={n}>
-                    <span className="muted pos">{t.position}</span>
-                    <span className="track-title">
-                      {t.title}
-                      {t.artist && <span className="muted small"> — {t.artist}</span>}
-                    </span>
-                    <span className="muted small">{t.duration}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ))
+          // A new key for each record stops one record's clip carrying over to the next.
+          <Tracklist key={record.id} record={record} />
         ) : (
           <p className="muted">No tracklist yet. Use Edit to add one.</p>
         )}

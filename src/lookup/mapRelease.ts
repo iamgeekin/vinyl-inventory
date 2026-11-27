@@ -263,6 +263,9 @@ export interface ItunesItem {
   discNumber?: number;
   discCount?: number;
   trackTimeMillis?: number;
+  previewUrl?: string;
+  trackViewUrl?: string;
+  collectionViewUrl?: string;
 }
 
 export const itunesArtwork = (url: string | undefined, size: number) =>

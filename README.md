@@ -86,6 +86,17 @@ Always check the chosen pressing: edition and colour are guessed from the Discog
 
 Saved cover thumbnails come from Cover Art Archive, iTunes or your own photo. Discogs pictures can only be linked to, so they may not show offline.
 
+## Track previews
+
+On a record's page, each track has a play button for a 30-second clip. Clips come from Apple's public search service: no account, key or subscription is needed, and nothing is saved.
+
+- Opening a record sends its artist and title to Apple to find the clips.
+- Tracks are matched by name. Live, remix and demo versions are only matched when your tracklist names them that way.
+- A magnifier button searches for a track that was not on the matched album. On iPhone it may take a second tap to start.
+- Previews need a connection, and some releases are not listed.
+- Spotify is offered as a search link only, because its service does not give previews to new apps without a server.
+- Apple allows previews for promoting its store, which is why a link to Apple Music sits beside them. Check Apple's current terms before using this in anything beyond a personal app.
+
 ## Where data lives
 
 ```
@@ -129,6 +140,7 @@ Turn a phone to landscape on the shelf to get the cover slider: the focused reco
 | `src/data` | Record types, browser storage, settings, sorting, totals, backup |
 | `src/sync` | Sync codes, encryption and Firestore |
 | `src/lookup` | Discogs, MusicBrainz and iTunes |
+| `src/preview` | Matching and playing track previews |
 | `src/scan` | Barcode camera, text reading, artwork and thumbnails |
 | `src/search` | Collection search |
 | `src/theme` | Colours from covers, light, dark and night |

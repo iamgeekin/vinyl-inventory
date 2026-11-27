@@ -34,5 +34,7 @@ export const MoonIcon = icon(<path d="M20 14.500A8.500 8.500 0 0 1 9.500 4a8.500
 export const NightIcon = icon(
   <><path d="M18 15.500A8 8 0 0 1 8.500 6a8 8 0 1 0 9.500 9.500z" fill="currentColor" /><path d="M17 3v5M14.500 5.500h5" /></>,
 );
+export const PlayIcon = icon(<path d="M8 5.500v13l11-6.500z" fill="currentColor" />);
+export const PauseIcon = icon(<path d="M8.500 5.500v13M15.500 5.500v13" strokeWidth="3" />);
 export const PreviousIcon = icon(<path d="M14 6l-6 6 6 6" />);
 export const NextIcon = icon(<path d="M10 6l6 6-6 6" />);
