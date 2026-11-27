@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AppearancePicker } from '../components/AppearancePicker';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { SyncSettings } from '../components/SyncSettings';
 import { buildBackup, parseBackup, toCsv, type Backup } from '../data/backup';
 import { sampleRecords } from '../data/sample';
 import { CURRENCIES } from '../data/types';
@@ -17,7 +18,7 @@ function download(name: string, type: string, content: string) {
 }
 
 export function Settings() {
-  const { records, repo, settings, saveSettings, session } = useApp();
+  const { records, repo, settings, saveSettings } = useApp();
   const [typed, setTyped] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [pending, setPending] = useState<Backup | null>(null);
@@ -82,19 +83,7 @@ export function Settings() {
       <div className="page-body">
         <p className="status" role="status">{status}</p>
 
-        <section className="card">
-          <h2>Account</h2>
-          {session ? (
-            <>
-              <p>Signed in as {session.email}. Your collection syncs to your account.</p>
-              <button type="button" className="button" onClick={() => session.signOut()}>Sign out</button>
-            </>
-          ) : (
-            <p>
-              Demo mode: records are kept only in this browser. Export a backup regularly, or connect Firebase (see the project README) to sync them.
-            </p>
-          )}
-        </section>
+        <SyncSettings />
 
         <section className="card">
           <h2>Appearance</h2>
@@ -117,7 +106,7 @@ export function Settings() {
           <p className="muted small">
             Optional but recommended: it adds cover pictures to search results and allows more searches. Create a personal token at{' '}
             <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noreferrer">discogs.com/settings/developers</a>.
-            It is stored with your private settings and sent only to Discogs.
+            It stays on this device, is never synced, and is sent only to Discogs.
           </p>
           <form className="row grow" onSubmit={saveToken}>
             <input type="password" aria-label="Discogs personal access token" autoComplete="off" value={token} onChange={(e) => setTyped(e.target.value)} />

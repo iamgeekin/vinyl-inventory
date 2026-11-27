@@ -15,7 +15,7 @@ import { PHONE_LANDSCAPE, useMediaQuery } from '../theme/useMediaQuery';
 import { useRecordColors } from '../theme/useRecordColors';
 
 export function Shelf() {
-  const { records, ready, settings, saveSettings, repo } = useApp();
+  const { records, ready, settings, saveSettings, repo, sync } = useApp();
   const [view, setView] = useState(readShelfState);
   const update = (patch: Partial<ShelfState>) => setView(writeShelfState(patch));
   const sideways = useMediaQuery(PHONE_LANDSCAPE);
@@ -123,6 +123,7 @@ export function Shelf() {
           {repo.kind === 'local' && (
             <button type="button" className="button" onClick={loadSamples}>Try it with sample records</button>
           )}
+          {repo.kind === 'local' && sync.available && <Link to="/settings">I have a sync code</Link>}
         </div>
       ) : shown.length === 0 ? (
         <div className="empty">

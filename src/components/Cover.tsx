@@ -13,7 +13,7 @@ export function useCoverSrc(record: VinylRecord | undefined): string {
   const { repo } = useApp();
   const id = record?.id ?? '';
   const version = record?.coverVersion ?? 0;
-  const key = `${repo.kind}:${id}:${version}`;
+  const key = `${repo.key}:${id}:${version}`;
   const [stored, setStored] = useState<{ key: string; src: string | null }>();
 
   useEffect(() => {

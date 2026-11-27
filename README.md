@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Without Firebase settings the app runs in **demo mode**: records are saved only in that browser. Open the shelf and choose "Try it with sample records" to look around.
+Without Firebase settings, records are saved only in that browser and syncing is not offered. Open the shelf and choose "Try it with sample records" to look around.
 
 | Command | What it does |
 |---|---|
@@ -24,18 +24,36 @@ Without Firebase settings the app runs in **demo mode**: records are saved only 
 
 ## Set up sync with Firebase
 
-The free Spark plan is enough. No payment card is needed.
+There are no accounts or logins. The free Spark plan is enough. You only need the database; leave Authentication and Storage switched off.
 
-1. In the [Firebase console](https://console.firebase.google.com/), create a project, then add a **Web app** to it. Keep the config values it shows.
-2. **Authentication > Sign-in method:** enable **Google** and **Email/Password**.
-3. **Authentication > Settings > Authorised domains:** add `iamgeekin.github.io`.
-4. **Firestore Database > Create database:** start in production mode. Pick the region nearest you; it cannot be changed later.
-5. **Firestore Database > Rules:** replace the contents with [`firestore.rules`](firestore.rules) and publish.
-6. For local testing, copy `.env.example` to `.env.local` and fill in the four values.
-7. For the published site, add the same four names under the GitHub repository's **Settings > Secrets and variables > Actions > Variables**.
-8. Open the app and sign in once. Then, in **Authentication > Settings > User actions**, turn **off** "Enable create (sign-up)". This stops strangers from creating accounts that use your free quota.
+1. In the [Firebase console](https://console.firebase.google.com/), create a project. Google Analytics is not needed.
+2. **Firestore Database > Create database:** keep the default database, start in **production mode**, and pick the region nearest you. The region cannot be changed later.
+3. **Firestore Database > Rules:** replace everything with the contents of [`firestore.rules`](firestore.rules) and **Publish**.
+4. **Firestore Database > Data > Start collection:** collection ID `config`, document ID `access`, one field named `invite` of type **string**. Its value is your **invite phrase**: make up a long one (at least 8 characters, several words is better).
+5. **Project settings > General > Your apps:** add a **Web app** (no Firebase Hosting). From the config it shows, you need `apiKey`, `projectId` and `appId`.
+6. For the published site, in the GitHub repository open **Settings > Secrets and variables > Actions > Variables** and add `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID` and `VITE_FIREBASE_APP_ID`. For local testing, copy `.env.example` to `.env.local` and fill them in.
+7. Publish again: push to `main`, or open **Actions > Deploy to GitHub Pages > Run workflow**.
 
-If you plan to use both Google and a password, sign in with Google first, then use "Forgot password" with the same email to set a password for that account.
+Optional: in the [Google Cloud console](https://console.cloud.google.com/apis/credentials), restrict the API key to the website `https://iamgeekin.github.io/*`.
+
+Never put the invite phrase in this repository.
+
+## Using sync
+
+| To do this | In the app, open Settings |
+|---|---|
+| Start a collection | **New collection**, enter the invite phrase, **Create sync code** |
+| Link another device | On the first device **Show sync code**; on the second **I have a code**, then scan or paste it |
+| Share a collection with a friend | Give them your code. They can see, change and delete everything in it |
+| Give a friend their own collection | Give them the invite phrase, not your code |
+| Unlink a device | **Stop syncing on this device**. It keeps a copy |
+
+- **Save your sync code**, for example in a password manager. If you lose it and every linked device, nobody can recover the collection.
+- **Privacy:** records and covers are encrypted on the device with a key made from the code. You cannot read friends' collections in the Firebase console; you can only see how many items they hold.
+- **Who can create collections:** only people with the invite phrase. Changing the phrase in `config/access` does not affect existing collections.
+- **Removing a collection from the server:** delete its document under `vaults`, including its subcollections, in the console.
+- **Settings stay on each device**, including the Discogs token and appearance.
+- **Clearing a browser's data** unlinks that device. Link it again with the code.
 
 ## Publish with GitHub Pages
 
@@ -49,7 +67,7 @@ If the repository has a different name, change `PAGES_BASE` in `vite.config.ts`.
 
 - **iPhone:** open the address in Safari, tap Share, then **Add to Home Screen**.
 - **Android:** open it in Chrome, open the menu, then **Install app**.
-- If Google sign-in fails inside the installed iPhone app, sign in with email and password.
+- On iPhone the home screen app keeps its own storage, so enter the sync code inside the installed app.
 
 ## Discogs token
 
@@ -71,10 +89,13 @@ Saved cover thumbnails come from Cover Art Archive, iTunes or your own photo. Di
 ## Where data lives
 
 ```
-users/{your id}/records/{record}   details of each record
-users/{your id}/covers/{record}    JPEG thumbnail, under 100 KB
-users/{your id}/settings/app       currency, Discogs token, shelf view, appearance
+config/access                      your invite phrase (you create this; apps cannot read it)
+vaults/{vault}                     one per synced collection; {vault} is a fingerprint of its code
+vaults/{vault}/records/{record}    record details, encrypted
+vaults/{vault}/covers/{record}     JPEG thumbnail, under 100 KB before encryption
 ```
+
+Without syncing, records and covers are in the browser's own storage. Settings are always there.
 
 **Settings > Export backup** saves everything to a JSON file that can be imported again. There is also a CSV export for spreadsheets.
 
@@ -105,7 +126,8 @@ Turn a phone to landscape on the shelf to get the cover slider: the focused reco
 
 | Folder | Contents |
 |---|---|
-| `src/data` | Record types, storage (browser and Firestore), sorting, totals, backup |
+| `src/data` | Record types, browser storage, settings, sorting, totals, backup |
+| `src/sync` | Sync codes, encryption and Firestore |
 | `src/lookup` | Discogs, MusicBrainz and iTunes |
 | `src/scan` | Barcode camera, text reading, artwork and thumbnails |
 | `src/search` | Collection search |

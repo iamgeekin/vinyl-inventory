@@ -2,10 +2,31 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // A signed-in person can read and write their own collection and nothing else.
-    // Everything not matched here is denied.
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+    // A vault is one synced collection. Its id is a fingerprint of the sync code,
+    // so only someone with the code can name it. There are no accounts.
+    match /vaults/{vault} {
+
+      // Creating a vault needs the invite phrase stored in config/access, which
+      // no app can read. Vault documents cannot be read, listed or changed.
+      allow create: if vault.matches('^[0-9a-f]{64}$')
+        && request.resource.data.keys().hasOnly(['invite', 'createdAt'])
+        && request.resource.data.invite is string
+        && request.resource.data.invite.size() >= 8
+        && request.resource.data.invite == get(/databases/$(database)/documents/config/access).data.invite;
+
+      // The contents are encrypted by the app before they arrive.
+      match /{kind}/{item} {
+        allow read, delete: if kind in ['records', 'covers']
+          && exists(/databases/$(database)/documents/vaults/$(vault));
+        allow create, update: if kind in ['records', 'covers']
+          && exists(/databases/$(database)/documents/vaults/$(vault))
+          && request.resource.data.keys().hasOnly(['v', 'iv', 'data'])
+          && request.resource.data.iv is bytes
+          && request.resource.data.data is bytes;
+      }
     }
+
+    // Everything not matched above is denied, including config/access.
   }
 }

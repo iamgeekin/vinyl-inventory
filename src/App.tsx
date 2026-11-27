@@ -7,7 +7,6 @@ import { RecordDetail } from './pages/RecordDetail';
 import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { Shelf } from './pages/Shelf';
-import { SignIn } from './pages/SignIn';
 import { Stats } from './pages/Stats';
 import { AppProvider, useApp } from './state/AppContext';
 import { useTheme } from './theme/ThemeContext';
@@ -58,10 +57,14 @@ function Layout() {
 export function App() {
   return (
     <AppProvider
-      signIn={() => <SignIn />}
-      splash={(message) => (
+      splash={(message, onStopSyncing) => (
         <div className="app">
-          <p className="empty muted" role="status">{message}</p>
+          <div className="empty">
+            <p className="muted" role="status">{message}</p>
+            {onStopSyncing && (
+              <button type="button" className="button" onClick={onStopSyncing}>Use this device without syncing</button>
+            )}
+          </div>
         </div>
       )}
     >

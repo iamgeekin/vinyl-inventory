@@ -1,16 +1,21 @@
-import type { Settings, VinylRecord } from './types';
+import type { VinylRecord } from './types';
 
 /** `undefined` keeps the stored cover, `null` removes it, a data URL replaces it. */
 export type CoverChange = string | null | undefined;
 
 export interface Repository {
-  readonly kind: 'local' | 'cloud';
+  readonly kind: 'local' | 'synced';
+  /** Tells one collection's cached covers from another's. */
+  readonly key: string;
   subscribeRecords(onChange: (records: VinylRecord[]) => void, onError: (e: Error) => void): () => void;
-  subscribeSettings(onChange: (settings: Partial<Settings>) => void, onError: (e: Error) => void): () => void;
   saveRecord(record: VinylRecord, cover: CoverChange): Promise<void>;
+  /**
+   * Stores a record exactly as given, timestamps included, for moving it between
+   * collections. Resolves once it is safely stored.
+   */
+  putRecord(record: VinylRecord, cover: string | null): Promise<void>;
   deleteRecord(id: string): Promise<void>;
   getCover(id: string, version: number): Promise<string | null>;
-  saveSettings(patch: Partial<Settings>): Promise<void>;
 }
 
 /** Stamps the record and keeps `coverVersion` in step with the cover change. */
