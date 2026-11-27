@@ -252,6 +252,17 @@ legend { float: left; grid-column: 1 / -1; width: 100%; padding: 0.5rem 0 0.75re
 .sync-code img { width: 220px; height: auto; border-radius: 12px; background: #fff; }
 .sync-code-text { font-size: 1.125rem; font-weight: 700; letter-spacing: 0.04em; user-select: all; -webkit-user-select: all; }
 
+/* ---------- Send to Discogs ---------- */
+/* Child selectors, so the search results opened inside a row keep their own layout. */
+.picks > li { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-top: 1px solid var(--line-strong); }
+.picks > li > .check, .pick-row { flex: 1; min-width: 0; }
+.picks .check input { flex-shrink: 0; }
+.picks > li > .check > span > span, .pick-row > span > span { display: block; }
+.picks > li > a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.picks > li.unlinked { flex-direction: column; align-items: stretch; }
+.pick-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
+.pick-row > .button { flex-shrink: 0; }
+
 /* ---------- Dialog ---------- */
 .dialog { width: min(22rem, calc(100% - 2rem)); padding: 1.25rem; border: 1px solid var(--line-strong); border-radius: 20px; background: var(--surface); color: var(--text); }
 .dialog::backdrop { background: rgb(0 0 0 / 0.7); }

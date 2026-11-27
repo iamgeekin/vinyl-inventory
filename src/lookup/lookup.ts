@@ -55,6 +55,21 @@ export function searchReleases(query: string, token: string, signal?: AbortSigna
   );
 }
 
+/** Discogs releases that may be the pressing of a record already in the collection. */
+export function discogsMatches(
+  record: { artist: string; title: string; barcode: string },
+  token: string,
+  signal?: AbortSignal,
+): Promise<LookupResult> {
+  return firstWithResults(
+    [
+      ...barcodeVariants(record.barcode).map((code) => () => discogsByBarcode(code, token, signal)),
+      () => discogsByText(`${record.artist} ${record.title}`.trim(), token, signal),
+    ],
+    signal,
+  );
+}
+
 export function loadRelease(candidate: Candidate, token: string, signal?: AbortSignal): Promise<ReleaseDraft> {
   if (candidate.source === 'discogs') return discogsRelease(candidate.id, token, signal);
   if (candidate.source === 'musicbrainz') return musicbrainzRelease(candidate.id, signal);

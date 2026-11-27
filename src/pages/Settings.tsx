@@ -102,9 +102,9 @@ export function Settings() {
         </section>
 
         <section className="card">
-          <h2>Discogs token</h2>
+          <h2>Discogs</h2>
           <p className="muted small">
-            Optional but recommended: it adds cover pictures to search results and allows more searches. Create a personal token at{' '}
+            A personal token adds cover pictures to search results, allows more searches and lets you send records to your Discogs collection. Create one at{' '}
             <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noreferrer">discogs.com/settings/developers</a>.
             It stays on this device, is never synced, and is sent only to Discogs.
           </p>
@@ -112,6 +112,7 @@ export function Settings() {
             <input type="password" aria-label="Discogs personal access token" autoComplete="off" value={token} onChange={(e) => setTyped(e.target.value)} />
             <button type="submit" className="button" disabled={typed === null}>Save</button>
           </form>
+          <Link className="button" to="/discogs">Send to Discogs</Link>
         </section>
 
         <section className="card">

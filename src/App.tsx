@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { TabBar } from './components/TabBar';
 import { Add } from './pages/Add';
+import { Discogs } from './pages/Discogs';
 import { EditRecord } from './pages/EditRecord';
 import { RecordDetail } from './pages/RecordDetail';
 import { Search } from './pages/Search';
@@ -46,6 +47,7 @@ function Layout() {
           <Route path="/record/:id/edit" element={<EditRecord />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/discogs" element={<Discogs />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

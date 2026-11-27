@@ -71,7 +71,18 @@ If the repository has a different name, change `PAGES_BASE` in `vite.config.ts`.
 
 ## Discogs token
 
-Create a personal access token at [discogs.com/settings/developers](https://www.discogs.com/settings/developers) and paste it into the app under **Settings**. It adds cover pictures to search results and raises the request limit. Do not put it in this repository.
+Create a personal access token at [discogs.com/settings/developers](https://www.discogs.com/settings/developers) and paste it into the app under **Settings**. It adds cover pictures to search results, raises the request limit and is needed to send records to your collection. Do not put it in this repository.
+
+## Send your collection to Discogs
+
+With a token saved, open **Settings > Send to Discogs** and choose **Check my collection**. The app reads your Discogs collection, lists the records Discogs does not have, and adds the ones you leave ticked to the **Uncategorized** folder. To try it first, choose **Select none** and tick one record.
+
+- **One way only:** nothing on Discogs is changed or removed, and nothing is imported from it. Deleting a record in the app leaves it on Discogs.
+- **Only the release is sent:** condition, price, purchase details, notes and cover photos stay in the app.
+- **Linked records:** a record added from a Discogs result already knows its release. For others, choose **Find** under **Not linked to Discogs** and pick the pressing you own. The choice is saved with the record.
+- **Copies:** if the app holds two records of one release and Discogs has one, one more is added.
+- **Speed:** about one release a second, to stay within the Discogs request limit. Keep the screen open until it finishes.
+- **Interrupted:** if a request fails and may have got through, sending stops. Check the collection again before sending more.
 
 ## How adding a record works
 
@@ -140,6 +151,7 @@ Turn a phone to landscape on the shelf to get the cover slider: the focused reco
 | `src/data` | Record types, browser storage, settings, sorting, totals, backup |
 | `src/sync` | Sync codes, encryption and Firestore |
 | `src/lookup` | Discogs, MusicBrainz and iTunes |
+| `src/discogs` | Sending records to a Discogs collection |
 | `src/preview` | Matching and playing track previews |
 | `src/scan` | Barcode camera, text reading, artwork and thumbnails |
 | `src/search` | Collection search |
