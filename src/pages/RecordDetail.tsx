@@ -6,6 +6,7 @@ import { Cover } from '../components/Cover';
 import { BackButton } from '../components/NavBar';
 import { Tracklist } from '../components/Tracklist';
 import { formatDate, formatMoney } from '../data/stats';
+import { useOriginalYear } from '../lookup/useOriginalYear';
 import { useApp } from '../state/AppContext';
 import { writeShelfState } from '../state/shelfState';
 import { useCoverTheme } from '../theme/ThemeContext';
@@ -13,11 +14,12 @@ import { useRecordColors } from '../theme/useRecordColors';
 
 export function RecordDetail() {
   const { id } = useParams();
-  const { records, ready, repo } = useApp();
+  const { records, ready, repo, settings, settingsReady } = useApp();
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
   const record = records.find((r) => r.id === id);
   useCoverTheme(useRecordColors(record));
+  const originalYear = useOriginalYear(record, settings.discogsToken, settingsReady);
   // The shelf comes back showing the record that was just viewed.
   useEffect(() => {
     if (record) writeShelfState({ selected: record.id });
@@ -71,6 +73,7 @@ export function RecordDetail() {
         <div className="title-block">
           <h1>{record.title}</h1>
           <p className="muted">{[record.artist, record.year, format.size && `${format.size}`].filter(Boolean).join(' · ')}</p>
+          {originalYear && <p className="muted small">Originally released {originalYear}</p>}
         </div>
 
         {(edition.isSpecial || editionLine) && (

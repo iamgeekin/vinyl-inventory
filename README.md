@@ -97,6 +97,15 @@ Always check the chosen pressing: edition and colour are guessed from the Discog
 
 Saved cover thumbnails come from Cover Art Archive, iTunes or your own photo. Discogs pictures can only be linked to, so they may not show offline.
 
+## Original release year
+
+A record's page shows when the album first came out, which for a reissue differs from the year of your pressing.
+
+- **Sources:** Discogs, using the linked release, then MusicBrainz. Opening a record sends the release ID, or its artist and title, to them.
+- **Kept on the device:** a year that was found is remembered there, so the record itself is not changed.
+- **Unsure:** nothing is shown if no match is found, or if albums of the same name came out in different years.
+- **Correct it:** type **Original year** on the record's edit form. It is saved with the record and replaces the one found online.
+
 ## Track previews
 
 On a record's page, each track has a play button for a 30-second clip. Clips come from Apple's public search service: no account, key or subscription is needed, and nothing is saved.

@@ -15,7 +15,10 @@ export interface VinylRecord {
   id: string;
   artist: string;
   title: string;
+  /** The year of this pressing or release. */
   year: number | null;
+  /** The album's first release year, if typed in. Null means it is looked up when shown. */
+  originalYear: number | null;
   country: string;
   label: string;
   catalogNumber: string;
@@ -87,6 +90,7 @@ export function emptyRecord(currency = 'USD'): VinylRecord {
     artist: '',
     title: '',
     year: null,
+    originalYear: null,
     country: '',
     label: '',
     catalogNumber: '',
@@ -131,6 +135,7 @@ export function normalizeRecord(input: unknown): VinylRecord {
     artist: str(r.artist),
     title: str(r.title),
     year: num(r.year),
+    originalYear: num(r.originalYear),
     country: str(r.country),
     label: str(r.label),
     catalogNumber: str(r.catalogNumber),

@@ -241,6 +241,9 @@ function Form({ initial, isNew, photo }: { initial: VinylRecord; isNew: boolean;
         <Field label="Release year">
           <input inputMode="numeric" maxLength={4} value={record.year ?? ''} onChange={(e) => patch({ year: Number(e.target.value.replace(/\D/g, '')) || null })} />
         </Field>
+        <Field label="Original year">
+          <input inputMode="numeric" maxLength={4} placeholder="Automatic" value={record.originalYear ?? ''} onChange={(e) => patch({ originalYear: Number(e.target.value.replace(/\D/g, '')) || null })} />
+        </Field>
         <Field label="Country"><input value={record.country} onChange={(e) => patch({ country: e.target.value })} /></Field>
         <Field label="Label"><input value={record.label} onChange={(e) => patch({ label: e.target.value })} /></Field>
         <Field label="Catalogue number"><input value={record.catalogNumber} onChange={(e) => patch({ catalogNumber: e.target.value })} /></Field>

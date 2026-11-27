@@ -29,3 +29,21 @@ export async function discogsRelease(id: string, token: string, signal?: AbortSi
   const data = await fetchJson<DiscogsRelease>('Discogs', `${API}/releases/${encodeURIComponent(id)}`, init(token, signal));
   return draftFromDiscogs(data);
 }
+
+/**
+ * The year of the album a release belongs to. Discogs groups the versions of an
+ * album under a "master"; without one, only the release's own year is known.
+ */
+export async function discogsOriginalYear(
+  releaseId: number,
+  token: string,
+): Promise<{ year: number | null; fromMaster: boolean }> {
+  const release = await fetchJson<{ year?: number; master_id?: number }>(
+    'Discogs',
+    `${API}/releases/${releaseId}`,
+    init(token),
+  );
+  if (!release.master_id) return { year: release.year || null, fromMaster: false };
+  const master = await fetchJson<{ year?: number }>('Discogs', `${API}/masters/${release.master_id}`, init(token));
+  return { year: master.year || null, fromMaster: Boolean(master.year) };
+}
