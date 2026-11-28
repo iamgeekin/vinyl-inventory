@@ -97,6 +97,16 @@ Always check the chosen pressing: edition and colour are guessed from the Discog
 
 Saved cover thumbnails come from Cover Art Archive, iTunes or your own photo. Discogs pictures can only be linked to, so they may not show offline.
 
+## Add from the search page
+
+The switch beside the **Search** title chooses between **Collection** and **Discogs**.
+
+- **Discogs search:** vinyl releases by artist, album, catalogue number or barcode. It starts when you press Search or Return, or switch over with something already typed, not on every keystroke.
+- **Add:** saves that release to your collection at once, with its tracklist, pressing details and artwork where one can be saved. Price, date, store and condition are left empty; add them later with **Edit**.
+- **Review first:** tap the result itself to open the filled-in form before saving.
+- **Already owned:** results are marked, and adding one again asks first.
+- Only this app's collection changes. To copy records to your Discogs account, see **Send your collection to Discogs**.
+
 ## Original release year
 
 A record's page shows when the album first came out, which for a reissue differs from the year of your pressing.

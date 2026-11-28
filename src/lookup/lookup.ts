@@ -55,6 +55,18 @@ export function searchReleases(query: string, token: string, signal?: AbortSigna
   );
 }
 
+/** Searches Discogs alone, by barcode first when that is what was typed. */
+export function searchDiscogs(query: string, token: string, signal?: AbortSignal): Promise<LookupResult> {
+  const isBarcode = /^[\d\s-]+$/.test(query) && [8, 12, 13, 14].includes(cleanBarcode(query).length);
+  return firstWithResults(
+    [
+      ...(isBarcode ? barcodeVariants(query).map((code) => () => discogsByBarcode(code, token, signal)) : []),
+      () => discogsByText(query, token, signal),
+    ],
+    signal,
+  );
+}
+
 /** Discogs releases that may be the pressing of a record already in the collection. */
 export function discogsMatches(
   record: { artist: string; title: string; barcode: string },
