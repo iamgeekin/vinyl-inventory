@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2 · Crate Dig</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .screen { padding-right: max(env(safe-area-inset-right, 0px), 12px); }
+  .body { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr) 232px 56px; grid-template-rows: minmax(0, 1fr); gap: 8px; margin-bottom: calc(var(--safe-b) * -1); padding-bottom: 6px; }
+  .body > * { min-height: 0; }
+  .crate { position: relative; touch-action: none; cursor: grab; perspective: 900px; perspective-origin: 40% 20%; }
+  .crate:active { cursor: grabbing; }
+  .glow { position: absolute; inset: -10% 5% 0 0; background: radial-gradient(closest-side, var(--glow), transparent); opacity: .5; pointer-events: none; }
+  .sleeve { position: absolute; left: var(--left); bottom: var(--floor); width: var(--size); height: var(--size); transform-origin: 50% 100%; border-radius: 4px; will-change: transform; }
+  .sleeve .face { position: absolute; inset: 0; border-radius: 4px; box-shadow: 0 -2px 10px rgb(0 0 0 / .35); }
+  .sleeve .dim { position: absolute; inset: 0; border-radius: 4px; background: #000; pointer-events: none; }
+  .sleeve .lip { position: absolute; left: 0; right: 0; top: 0; height: 3px; border-radius: 4px 4px 0 0; background: rgb(255 255 255 / .35); }
+  .sleeve .disc { inset: 3%; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+  .tab { position: absolute; bottom: 100%; min-width: 30px; height: 18px; padding: 0 8px; border-radius: 7px 7px 0 0; background: var(--text); color: var(--bg); font: 700 11px/18px var(--sans); text-align: center; white-space: nowrap; }
+
+  /* The front of the crate, which the flipped sleeves tip into. */
+  .front { position: absolute; z-index: 200; left: calc(var(--left) - 22px); bottom: 0; width: calc(var(--size) + 44px); height: calc(var(--floor) + 5px); border-radius: 6px 6px 14px 14px; background: linear-gradient(color-mix(in srgb, var(--surface) 80%, #fff), var(--surface) 22%, color-mix(in srgb, var(--surface) 75%, #000)); box-shadow: 0 -6px 18px rgb(0 0 0 / .35), inset 0 0 0 .5px var(--line-strong); display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .front i { width: 54px; height: 12px; border-radius: 8px; background: var(--bg); box-shadow: inset 0 2px 4px rgb(0 0 0 / .5); }
+  .front b { min-width: 64px; font: 700 15px var(--serif); text-align: center; white-space: nowrap; }
+
+  .panel { display: flex; flex-direction: column; justify-content: center; gap: 10px; min-width: 0; padding-bottom: 6px; }
+  .panel h2 { font: 600 25px/1.12 var(--serif); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .panel p { font-size: 14px; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 0; }
+  .facts div { padding: 6px 8px; border-radius: 12px; background: var(--surface); min-width: 0; }
+  .facts dt { color: var(--muted); font-size: 11px; }
+  .facts dd { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .facts .wide { grid-column: span 2; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .actions .button { flex: 1; }
+
+  /* An index down the side, as in iPhone Contacts. */
+  .index { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: stretch; margin: 4px 0; border-radius: 24px; touch-action: none; cursor: pointer; }
+  .index.is-scrubbing { background: var(--surface); }
+  .index b { display: flex; flex: 0 1 18px; align-items: center; justify-content: center; min-height: 0; color: var(--accent); font-size: 11px; line-height: 1; white-space: nowrap; }
+  .index b.is-current { background: var(--fill); color: var(--fill-ink); border-radius: 9px; margin: 0 6px; }
+  .index b.dot { font-size: 7px; }
+  .bubble { position: absolute; z-index: 300; right: calc(100% + 8px); padding: 10px 18px; border-radius: 22px; background: var(--text); color: var(--bg); font: 700 24px var(--serif); white-space: nowrap; transform: translateY(-50%); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .index.is-scrubbing .bubble { opacity: 1; }
+</style>
+</head>
+<body>
+<main class="screen">
+  <header class="head">
+    <h1>Collection <small data-f="count"></small></h1>
+    <div class="segmented" data-sorts></div>
+    <button class="round" data-mode></button>
+  </header>
+  <div class="body">
+    <div class="crate" role="group" aria-label="Crate. Swipe down to flip to the next record." tabindex="0">
+      <div class="glow"></div>
+      <div class="sleeves"></div>
+      <div class="front"><i></i><b data-f="mark"></b><i></i></div>
+    </div>
+    <section class="panel">
+      <h2 data-f="title"></h2>
+      <p><b data-f="artist"></b><br><span class="accent" data-f="edition"></span></p>
+      <dl class="facts">
+        <div><dt>Year</dt><dd data-f="year"></dd></div>
+        <div class="wide"><dt>Bought</dt><dd data-f="bought"></dd></div>
+        <div><dt>Paid</dt><dd data-f="price"></dd></div>
+        <div class="wide"><dt>Genre</dt><dd data-f="genre"></dd></div>
+      </dl>
+      <div class="actions">
+        <button class="round" data-step="-1"></button>
+        <button class="button primary" data-open>Open</button>
+        <button class="round" data-step="1"></button>
+      </div>
+    </section>
+    <nav class="index" aria-label="Jump to a group"></nav>
+  </div>
+</main>
+<script src="shared/records.js"></script>
+<script src="shared/core.js"></script>
+<script>
+(() => {
+  const D = window.Deck, S = D.state;
+  const crate = document.querySelector('.crate'), box = document.querySelector('.sleeves'), index = document.querySelector('.index');
+  const BEHIND = 7, STEP = 13;
+  let cache = new Map(), groups = [], size = 200;
+
+  function build() {
+    const h = crate.clientHeight, w = crate.clientWidth;
+    const floor = 40;
+    size = Math.round(D.clamp(h - floor - BEHIND * STEP - 6, 130, 230));
+    crate.style.setProperty('--size', size + 'px');
+    crate.style.setProperty('--floor', floor + 'px');
+    // Room is left on the right for the disc to slide into.
+    crate.style.setProperty('--left', Math.max(22, Math.round((w - size * 1.42) / 2)) + 'px');
+    box.innerHTML = '';
+    cache = new Map();
+    groups = [];
+    S.list.forEach((r, i) => {
+      const name = D.bucket(r);
+      if (!groups.length || groups[groups.length - 1].name !== name) groups.push({ name, at: i });
+    });
+    const room = Math.max(8, Math.floor((crate.clientHeight - 8) / 14));
+    const every = Math.ceil(groups.length / room);
+    index.innerHTML = groups.map((g, i) => (i % every === 0 ? `<b data-g="${i}">${g.name}</b>` : i % every === 1 && every > 1 ? `<b class="dot" data-g="${i}">•</b>` : '')).join('') + '<span class="bubble" data-f="mark"></span>';
+  }
+
+  function sleeve(i) {
+    let el = cache.get(i);
+    if (!el) {
+      const r = S.list[i], g = groups.findIndex((x) => x.at === i);
+      el = document.createElement('div');
+      el.className = 'sleeve';
+      el.dataset.id = r.id;
+      el.dataset.i = i;
+      // Divider tabs step across the crate so that neighbouring ones stay readable.
+      const tab = g >= 0 ? `<span class="tab" style="left:${8 + (g % 4) * 22}%">${groups[g].name}</span>` : '';
+      el.innerHTML = `${tab}${D.discHtml(r)}<div class="face" style="background:${r.spine}"><img class="art" src="${r.img}" alt=""><div class="lip"></div></div><div class="dim"></div>`;
+      box.append(el);
+      cache.set(i, el);
+    }
+    return el;
+  }
+
+  function draw() {
+    const p = S.p;
+    const from = Math.max(0, Math.floor(p) - 4), to = Math.min(S.list.length - 1, Math.ceil(p) + BEHIND);
+    for (const [i, el] of cache) el.hidden = i < from || i > to;
+    for (let i = from; i <= to; i++) {
+      const el = sleeve(i), d = i - p;
+      el.hidden = false;
+      let transform, dim, opacity = 1;
+      if (d >= 0) {
+        // Waiting their turn, each a little higher and further back.
+        transform = `translate3d(0, ${-d * STEP}px, ${-d * 26}px)`;
+        dim = Math.min(0.62, d * 0.11);
+        opacity = D.clamp(BEHIND - d, 0, 1);
+      } else {
+        // Flipped past: tips towards you into the front of the crate.
+        const t = Math.min(1, -d), rest = Math.max(0, -d - 1);
+        transform = `translate3d(0, ${t * 25 + rest * 4}px, ${t * 10}px) rotateX(${-(t * 82 + Math.min(6, rest * 2))}deg)`;
+        dim = t * 0.25 + rest * 0.12;
+        opacity = D.clamp(1 - (rest - 1) / 3, 0, 1);
+      }
+      el.style.transform = transform;
+      el.style.opacity = opacity;
+      el.style.zIndex = d <= -0.5 ? Math.round(150 + d) : Math.round(100 - d * 2);
+      el.querySelector('.dim').style.opacity = dim;
+      const disc = el.querySelector('.disc'), settled = Math.abs(d) < 0.001;
+      disc.style.transform = settled ? `translateX(${size * 0.4}px)` : 'none';
+      disc.style.opacity = Math.abs(d) < 0.5 ? 1 : 0;
+      disc.classList.toggle('is-spinning', settled);
+    }
+  }
+
+  function light() {
+    let current = 0;
+    groups.forEach((g, i) => { if (g.at <= S.index) current = i; });
+    const marks = [...index.querySelectorAll('b')];
+    marks.forEach((b, n) => {
+      const next = marks[n + 1] ? +marks[n + 1].dataset.g : groups.length;
+      b.classList.toggle('is-current', +b.dataset.g <= current && current < next);
+    });
+    const bubble = index.querySelector('.bubble'), on = index.querySelector('.is-current');
+    if (on) bubble.style.top = on.offsetTop + on.offsetHeight / 2 + 'px';
+    bubble.textContent = D.mark(D.record());
+  }
+
+  D.on('sort', () => { build(); light(); });
+  D.on('frame', draw);
+  D.on('focus', light);
+  // Down flips the front sleeve towards you, as in a real crate.
+  D.drag(crate, {
+    axis: 'y', perItem: 46, reverse: true,
+    onTap: (target) => {
+      const el = target.closest('.sleeve');
+      if (!el) return;
+      const i = +el.dataset.i;
+      if (i !== S.index) D.go(i);
+      else if (target.closest('.disc')) D.toast('Tap the disc: plays a preview of side A');
+      else D.open();
+    },
+  });
+  // The index jumps to the start of a group.
+  D.scrub(index, (e) => {
+    const marks = [...index.querySelectorAll('b')];
+    const top = marks[0].getBoundingClientRect().top, bottom = marks[marks.length - 1].getBoundingClientRect().bottom;
+    const g = D.clamp(Math.floor(((e.clientY - top) / (bottom - top)) * groups.length), 0, groups.length - 1);
+    return groups[g].at;
+  });
+  D.start();
+})();
+</script>
+</body>
+</html>

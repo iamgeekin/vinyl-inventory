@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>5 · Needle Drop</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .stage { position: relative; display: flex; flex: 1; min-height: 0; align-items: center; gap: 18px; touch-action: none; }
+  /* The title again, huge and faint, filling the space behind. */
+  .ghost { position: absolute; left: 30%; right: calc(var(--safe-r) * -1); bottom: -14px; color: var(--text); font: 700 92px/1 var(--serif); opacity: .045; white-space: nowrap; overflow: hidden; pointer-events: none; }
+  .hero { position: relative; flex-shrink: 0; width: calc(var(--size) * 1.46); height: var(--size); }
+  .card { position: absolute; left: 0; top: 0; width: var(--size); height: var(--size); cursor: pointer; }
+  .card .disc { inset: 1.5%; transform: translateX(46%); transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+  .card.in .disc { transform: translateX(0); }
+  .card .sleeve { position: absolute; inset: 0; border-radius: 4px; box-shadow: 0 10px 26px rgb(0 0 0 / .45); }
+  /* The tone arm drops onto the disc once you stop. */
+  .arm { position: absolute; z-index: 3; right: 2px; top: -4px; width: 40px; height: calc(var(--size) * .72); transform-origin: 28px 12px; transform: rotate(-4deg); transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); pointer-events: none; overflow: visible; }
+  .arm.is-down { transform: rotate(28deg); }
+  .about { position: relative; display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 7px; }
+  .about h2 { font: 600 28px/1.08 var(--serif); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .about p { font-size: 14px; }
+  .facts { display: flex; gap: 16px; margin: 0; }
+  .facts dt { color: var(--muted); font-size: 11px; }
+  .facts dd { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+
+  /* Every record at once. The ones under your finger widen like a lens. */
+  .dial { position: relative; flex-shrink: 0; height: var(--dial); margin-top: 8px; touch-action: none; cursor: ew-resize; }
+  .spines { position: absolute; left: 0; right: 0; bottom: 22px; height: calc(var(--dial) - 36px); filter: var(--art); }
+  .spine { position: absolute; bottom: 0; left: 0; overflow: hidden; border-radius: 2px; box-shadow: inset 1px 0 0 rgb(255 255 255 / .22), inset -1px 0 0 rgb(0 0 0 / .35); }
+  .spine b { position: absolute; left: 50%; top: 5px; bottom: 11px; transform: translateX(-50%); writing-mode: vertical-rl; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10.5px; font-weight: 700; line-height: 1; }
+  .spine i { position: absolute; left: 0; right: 0; bottom: 3px; height: 4px; }
+  .spine.is-focused { z-index: 3; box-shadow: 0 0 0 2.5px var(--text), 0 6px 18px rgb(0 0 0 / .5); }
+  .ledge { position: absolute; left: -4px; right: -4px; bottom: 18px; height: 3px; background: var(--fill); box-shadow: 0 4px 16px color-mix(in srgb, var(--fill) 55%, transparent); }
+  .ruler { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; font: 700 11px/16px var(--sans); color: var(--muted); }
+  .ruler span { position: absolute; top: 0; padding-left: 4px; border-left: 1.5px solid var(--line-strong); white-space: nowrap; transition: left .12s linear; }
+  .flag { position: absolute; z-index: 5; bottom: calc(var(--dial) - 6px); padding: 5px 14px; border-radius: 18px; background: var(--text); color: var(--bg); font: 700 17px var(--serif); white-space: nowrap; transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .dial.is-scrubbing .flag { opacity: 1; }
+</style>
+</head>
+<body>
+<main class="screen">
+  <header class="head">
+    <h1>Collection <small data-f="count"></small></h1>
+    <div class="segmented" data-sorts></div>
+    <button class="round" data-mode></button>
+  </header>
+  <div class="stage" role="group" aria-label="Record in focus. Swipe for the next one.">
+    <div class="ghost" data-f="title" aria-hidden="true"></div>
+    <div class="hero"></div>
+    <section class="about">
+      <h2 data-f="title"></h2>
+      <p><b data-f="artist"></b> <span class="accent" data-f="edition"></span></p>
+      <dl class="facts">
+        <div><dt>Year</dt><dd data-f="year"></dd></div>
+        <div><dt>Bought</dt><dd data-f="bought"></dd></div>
+        <div><dt>Paid</dt><dd data-f="price"></dd></div>
+      </dl>
+      <div class="actions">
+        <button class="round" data-step="-1"></button>
+        <button class="button primary" data-open>Open</button>
+        <button class="round" data-step="1"></button>
+      </div>
+    </section>
+  </div>
+  <div class="dial" role="group" aria-label="Whole collection. Drag along it.">
+    <div class="spines"></div>
+    <div class="ledge"></div>
+    <div class="ruler"></div>
+    <span class="flag" data-f="mark"></span>
+  </div>
+</main>
+<script src="shared/records.js"></script>
+<script src="shared/core.js"></script>
+<script>
+(() => {
+  const D = window.Deck, S = D.state;
+  const stage = document.querySelector('.stage'), hero = document.querySelector('.hero'), dial = document.querySelector('.dial');
+  const box = dial.querySelector('.spines'), ruler = dial.querySelector('.ruler'), flag = dial.querySelector('.flag');
+  const FOCUS = 34, LENS = 5.5, SPREAD = 3.2;
+  let spines = [], labels = [], settle, shown = null;
+
+  function build() {
+    const screen = document.querySelector('.screen').clientHeight;
+    const dialHeight = Math.round(D.clamp(screen * 0.36, 118, 160));
+    dial.style.setProperty('--dial', dialHeight + 'px');
+    box.innerHTML = '';
+    spines = S.list.map((r, i) => {
+      const el = document.createElement('div');
+      el.className = 'spine';
+      el.dataset.id = r.id;
+      el.style.background = r.spine;
+      el.style.color = D.inkOn(r.spine);
+      el.innerHTML = `<b>${r.title}</b><i style="background:${r.pop}"></i>`;
+      box.append(el);
+      return el;
+    });
+    ruler.innerHTML = '';
+    labels = [];
+    S.list.forEach((r, i) => {
+      const name = D.bucket(r);
+      if (i && name === D.bucket(S.list[i - 1])) return;
+      const el = document.createElement('span');
+      el.textContent = name;
+      ruler.append(el);
+      labels.push({ el, at: i, width: el.offsetWidth });
+    });
+    shown = null;
+    size();
+    deal(false);
+  }
+
+  function size() {
+    hero.style.setProperty('--size', Math.round(D.clamp(stage.clientHeight - 8, 110, 200)) + 'px');
+  }
+
+  /**
+   * Widths along the dial. The focused spine keeps a place in proportion to its
+   * position, so it always sits under the finger that chose it.
+   */
+  function layout(p) {
+    const n = S.list.length, total = box.clientWidth, at = D.clamp(p, 0, n - 1);
+    const rest = total - FOCUS;
+    const parts = spines.map((_, i) => {
+      const focus = Math.max(0, 1 - Math.abs(i - at));
+      const weight = (1 - focus) * (1 + LENS * Math.exp(-((i - at) ** 2) / (2 * SPREAD * SPREAD)));
+      return { focus, weight, before: i < at };
+    });
+    const sum = [0, 0];
+    parts.forEach((q) => (sum[q.before ? 0 : 1] += q.weight));
+    const share = [(rest * at) / (n - 1), (rest * (n - 1 - at)) / (n - 1)];
+    let x = 0;
+    return parts.map((q) => {
+      const side = q.before ? 0 : 1;
+      const width = q.focus * FOCUS + (sum[side] ? (q.weight / sum[side]) * share[side] : 0);
+      const here = { x, width, focus: q.focus };
+      x += width;
+      return here;
+    });
+  }
+
+  function draw() {
+    const places = layout(S.p);
+    const tall = box.clientHeight;
+    places.forEach(({ x, width, focus }, i) => {
+      const el = spines[i];
+      el.style.transform = `translate(${x}px, ${-focus * 10}px)`;
+      el.style.width = `${Math.max(1, width - 1)}px`;
+      el.style.height = `${tall * (0.82 + 0.1 * Math.min(1, width / 30) + 0.08 * focus)}px`;
+      el.firstChild.style.opacity = D.clamp((width - 13) / 4, 0, 1);
+      el.classList.toggle('is-focused', i === S.index);
+    });
+    // Labels sit under the first spine of their group, skipping any that would collide.
+    let free = 0;
+    const current = labels.reduce((best, l, n) => (l.at <= S.index ? n : best), 0);
+    labels.forEach((l, n) => {
+      const x = places[l.at].x;
+      const mine = n === current;
+      const fits = x >= free && x + l.width <= box.clientWidth + 8;
+      l.el.style.left = `${x}px`;
+      l.el.style.visibility = fits ? 'visible' : 'hidden';
+      l.el.style.color = mine ? 'var(--accent)' : '';
+      if (fits) free = x + l.width + 6;
+    });
+    const here = places[S.index];
+    flag.style.left = `${D.clamp(here.x + here.width / 2, 30, box.clientWidth - 30)}px`;
+  }
+
+  /** Swaps the record on the deck. While you are still moving, its disc stays in. */
+  function deal(moving) {
+    const r = D.record();
+    if (shown !== r.id) {
+      shown = r.id;
+      hero.innerHTML = `<div class="card in" data-id="${r.id}">${D.discHtml(r)}<div class="sleeve"><img class="art" src="${r.img}" alt="${r.title} cover"></div></div>
+        <svg class="arm" viewBox="0 0 40 150" preserveAspectRatio="xMidYMin meet" aria-hidden="true"><path d="M28 12V104L14 134" fill="none" stroke="var(--text)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="12" r="11" fill="var(--surface)" stroke="var(--text)" stroke-width="2"/><rect x="6" y="128" width="14" height="20" rx="3" transform="rotate(32 13 138)" fill="var(--fill)" stroke="var(--text)" stroke-width="1.5"/></svg>`;
+    }
+    clearTimeout(settle);
+    settle = setTimeout(() => {
+      const card = hero.querySelector('.card');
+      card.classList.remove('in');
+      card.querySelector('.disc').classList.add('is-spinning');
+      hero.querySelector('.arm').classList.add('is-down');
+    }, moving ? 260 : 30);
+  }
+
+  D.on('sort', build);
+  D.on('frame', draw);
+  D.on('focus', () => deal(true));
+  // A tap picks the spine you touch. A drag is absolute: where the finger is,
+  // is the record you get. The lens moves spines about, so the two differ.
+  const toP = (e) => {
+    const b = box.getBoundingClientRect();
+    return D.clamp(((e.clientX - b.left - FOCUS / 2) / (b.width - FOCUS)) * (S.list.length - 1), 0, S.list.length - 1);
+  };
+  let touch = null;
+  dial.addEventListener('pointerdown', (e) => {
+    D.stop();
+    const here = (touch = { x: e.clientX, spine: e.target.closest('.spine'), moved: false });
+    dial.setPointerCapture(e.pointerId);
+    here.hold = setTimeout(() => {
+      if (touch !== here || here.moved || !here.spine) return;
+      touch = null;
+      D.toast(`Menu: Open · Edit · Delete “${window.RECORDS.find((r) => r.id === here.spine.dataset.id).title}”`);
+    }, 550);
+  });
+  dial.addEventListener('pointermove', (e) => {
+    if (!touch || (!touch.moved && Math.abs(e.clientX - touch.x) < 6)) return;
+    touch.moved = true;
+    clearTimeout(touch.hold);
+    dial.classList.add('is-scrubbing');
+    D.stop();
+    D.setP(toP(e));
+  });
+  const lift = (e) => {
+    if (!touch) return;
+    const done = touch;
+    touch = null;
+    clearTimeout(done.hold);
+    dial.classList.remove('is-scrubbing');
+    if (done.moved || e.type !== 'pointerup') D.go(S.p);
+    else D.go(done.spine ? spines.indexOf(done.spine) : toP(e), 60);
+  };
+  dial.addEventListener('pointerup', lift);
+  dial.addEventListener('pointercancel', lift);
+  D.drag(stage, {
+    perItem: 80,
+    onTap: (target) => {
+      if (target.closest('.disc')) D.toast('Tap the disc: plays a preview of side A');
+      else if (target.closest('.card')) D.open();
+    },
+  });
+  // The buttons sit inside the swipe area, so keep their taps to themselves.
+  document.querySelector('.actions').addEventListener('pointerdown', (e) => e.stopPropagation());
+  D.start();
+})();
+</script>
+</body>
+</html>
