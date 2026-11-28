@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1 · Pull-Out Shelf</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .stage { position: relative; flex: 1; min-height: 0; margin: 0 calc(var(--safe-r) * -1) 0 calc(var(--safe-l) * -1); touch-action: none; cursor: grab; }
+  .stage:active { cursor: grabbing; }
+  .world { position: absolute; inset: 0 auto 0 0; will-change: transform; }
+  .ledge { position: absolute; left: 0; right: 0; bottom: 6px; height: 4px; background: var(--fill); box-shadow: 0 6px 22px color-mix(in srgb, var(--fill) 55%, transparent); }
+  .lamp { position: absolute; inset: -30px 22% 0; background: radial-gradient(closest-side, var(--glow), transparent); opacity: .55; pointer-events: none; }
+
+  .item { position: absolute; bottom: 10px; left: 0; height: var(--size); }
+  .spine { position: absolute; left: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100%; padding: 8px 0; overflow: hidden; border-radius: 2px; box-shadow: inset 1px 0 0 rgb(255 255 255 / .18), inset -3px 0 4px rgb(0 0 0 / .28); filter: var(--art); transform-origin: left bottom; }
+  .spine b { writing-mode: vertical-rl; flex: 1; min-height: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11.5px; font-weight: 700; line-height: 1; }
+  .spine b span { font-weight: 500; opacity: .85; }
+  .spine i { flex-shrink: 0; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; }
+
+  .pulled { position: absolute; bottom: 0; width: var(--size); height: var(--size); transform-origin: left bottom; }
+  .pulled .disc { inset: 3%; }
+  .sleeve { position: absolute; inset: 0; border-radius: 4px; box-shadow: 0 10px 28px rgb(0 0 0 / .45); transform-origin: left center; }
+  /* The lit edge and the shadow of a sleeve still turning towards you. */
+  .shade { position: absolute; inset: 0; border-radius: 4px; background: linear-gradient(90deg, #000, transparent 70%); pointer-events: none; }
+
+  /* Record-shop divider cards, one wherever the next group begins. */
+  .divider { position: absolute; bottom: 10px; width: 10px; height: calc(var(--size) + 12px); border-radius: 3px 3px 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--surface) 70%, #fff), var(--surface)); box-shadow: 0 0 0 .5px var(--line-strong); }
+  .divider b { position: absolute; left: 0; bottom: 100%; min-width: 24px; height: 20px; padding: 0 7px; border-radius: 7px 7px 0 0; background: color-mix(in srgb, var(--surface) 70%, #fff); color: #141414; font: 700 12px/20px var(--sans); white-space: nowrap; text-align: center; }
+
+  .info { display: flex; flex-shrink: 0; align-items: center; gap: 12px; height: 54px; padding-top: 2px; }
+  .names { flex: 1; min-width: 0; }
+  .names h2 { font: 600 21px/1.2 var(--serif); }
+  .names p { font-size: 13.5px; }
+
+  /* The whole collection as a strip of spine colours: drag it to jump anywhere. */
+  .strip { position: relative; display: flex; flex-shrink: 0; align-items: center; gap: 10px; height: 30px; font-size: 12px; font-weight: 600; }
+  .strip > span { flex-shrink: 0; min-width: 20px; white-space: nowrap; }
+  .strip > span:last-child { text-align: right; }
+  .rail { position: relative; flex: 1; height: 44px; touch-action: none; cursor: pointer; }
+  .ticks { position: absolute; inset: 15px 0; display: flex; gap: 1px; filter: var(--art); }
+  .ticks i { flex: 1; border-radius: 1px; }
+  .thumb { position: absolute; top: 8px; bottom: 8px; width: 14px; margin-left: -7px; border: 2.5px solid var(--text); border-radius: 6px; box-shadow: 0 0 0 1px var(--bg), 0 2px 8px rgb(0 0 0 / .4); pointer-events: none; }
+  .bubble { position: absolute; bottom: 44px; padding: 8px 16px; border-radius: 20px; background: var(--text); color: var(--bg); font: 700 20px var(--serif); white-space: nowrap; transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 40; }
+  .rail.is-scrubbing .bubble { opacity: 1; }
+</style>
+</head>
+<body>
+<main class="screen">
+  <header class="head">
+    <h1>Collection <small data-f="count"></small></h1>
+    <div class="segmented" data-sorts></div>
+    <button class="round" data-mode></button>
+  </header>
+  <div class="stage" role="group" aria-label="Records. Swipe or use the arrow keys." tabindex="0">
+    <div class="lamp"></div>
+    <div class="ledge"></div>
+    <div class="world"></div>
+  </div>
+  <div class="info">
+    <button class="round" data-step="-1"></button>
+    <div class="names">
+      <h2 class="one-line" data-f="title"></h2>
+      <p class="muted one-line" data-f="meta"></p>
+    </div>
+    <button class="button primary" data-open>Open</button>
+    <button class="round" data-step="1"></button>
+  </div>
+  <div class="strip">
+    <span class="muted" data-f="first"></span>
+    <div class="rail">
+      <div class="ticks"></div>
+      <div class="thumb"></div>
+      <div class="bubble" data-f="mark"></div>
+    </div>
+    <span class="muted" data-f="last"></span>
+  </div>
+</main>
+<script src="shared/records.js"></script>
+<script src="shared/core.js"></script>
+<script>
+(() => {
+  const D = window.Deck, S = D.state;
+  const stage = document.querySelector('.stage'), world = document.querySelector('.world');
+  const rail = document.querySelector('.rail'), thumb = rail.querySelector('.thumb'), bubble = rail.querySelector('.bubble');
+  const DIVIDER = 22;
+  let items = [], size = 220;
+  const widthOf = (r) => 23 + (r.title.length % 5) + (r.discs - 1) * 8;
+  const smooth = (t) => t * t * (3 - 2 * t);
+
+  function build() {
+    size = Math.round(D.clamp(stage.clientHeight - 48, 150, 250));
+    stage.style.setProperty('--size', size + 'px');
+    world.innerHTML = '';
+    items = S.list.map((r, i) => {
+      const group = D.bucket(r);
+      const first = i === 0 || group !== D.bucket(S.list[i - 1]);
+      let divider = null;
+      if (first) {
+        divider = document.createElement('div');
+        divider.className = 'divider';
+        divider.innerHTML = `<b>${group}</b>`;
+        world.append(divider);
+      }
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.dataset.id = r.id;
+      el.dataset.i = i;
+      const w = widthOf(r), ink = D.inkOn(r.spine);
+      el.innerHTML = `<div class="spine" style="width:${w}px;background:${r.spine};color:${ink}"><b>${r.artist} <span>· ${r.title}</span></b><i style="background:${r.pop}"></i></div>`;
+      world.append(el);
+      return { r, el, w, divider, spine: el.firstChild, pulled: null };
+    });
+    document.querySelector('.ticks').innerHTML = S.list.map((r) => `<i style="background:linear-gradient(${r.spine} 0 70%, ${r.pop} 0)"></i>`).join('');
+  }
+
+  // The cover and disc are only made for records near the focus.
+  function pulledFor(item) {
+    if (!item.pulled) {
+      item.el.insertAdjacentHTML('beforeend', `<div class="pulled">${D.discHtml(item.r)}<div class="sleeve"><img class="art" src="${item.r.img}" alt=""><div class="shade"></div></div></div>`);
+      item.pulled = item.el.lastChild;
+    }
+    return item.pulled;
+  }
+
+  function draw() {
+    const p = S.p, overhang = size * 0.4, margin = 20;
+    const openWidth = size + overhang + margin * 2;
+    let x = 0;
+    const centres = [];
+    items.forEach((item, i) => {
+      const o = smooth(Math.max(0, 1 - Math.abs(i - p)));
+      if (item.divider) { item.divider.style.left = `${x + 6}px`; x += DIVIDER; }
+      const width = item.w + (openWidth - item.w) * o;
+      item.el.style.transform = `translateX(${x}px)`;
+      item.el.style.width = `${width}px`;
+      item.el.style.zIndex = o > 0 ? 10 : 1;
+      // The middle of the sleeve and disc together, which is what gets centred.
+      centres.push(x + item.w / 2 + (openWidth / 2 - item.w / 2) * o);
+      item.spine.style.opacity = Math.max(0, 1 - o * 2.2);
+      item.spine.style.transform = `scaleX(${1 - o * 0.5})`;
+      if (o > 0.01) {
+        const pulled = pulledFor(item);
+        pulled.hidden = false;
+        pulled.style.left = `${margin * o}px`;
+        const sleeve = pulled.querySelector('.sleeve'), disc = pulled.querySelector('.disc');
+        // Turns in from edge-on, like a sleeve swung round from its spine.
+        const turn = (1 - o) * 0.96, width = Math.max(item.w / size, o);
+        sleeve.style.transform = o > 0.999 ? 'none' : `perspective(900px) rotateY(${turn}rad) scaleX(${Math.min(1, width / Math.cos(turn))})`;
+        sleeve.style.opacity = Math.min(1, o * 2.2);
+        sleeve.lastElementChild.style.opacity = (1 - o) * 0.75;
+        disc.style.transform = `translateX(${overhang * Math.max(0, o * 3 - 2)}px)`;
+        disc.style.opacity = o > 0.6 ? 1 : 0;
+        disc.classList.toggle('is-spinning', Math.abs(i - p) < 0.001);
+      } else if (item.pulled) item.pulled.hidden = true;
+      x += width;
+    });
+    const low = D.clamp(Math.floor(p), 0, items.length - 1), high = Math.min(items.length - 1, low + 1);
+    const centre = centres[low] + (centres[high] - centres[low]) * D.clamp(p - low, 0, 1) + (p < 0 ? p * 60 : 0) + Math.max(0, p - (items.length - 1)) * 60;
+    world.style.transform = `translateX(${stage.clientWidth / 2 - centre}px)`;
+    const at = ((D.clamp(p, 0, items.length - 1) + 0.5) / items.length) * rail.clientWidth;
+    thumb.style.left = `${at}px`;
+    bubble.style.left = `${D.clamp(at, 36, rail.clientWidth - 36)}px`;
+  }
+
+  D.on('sort', build);
+  D.on('frame', draw);
+  D.drag(stage, {
+    perItem: 38,
+    onTap: (target) => {
+      const el = target.closest('.item');
+      if (!el) return;
+      const i = +el.dataset.i;
+      if (i !== S.index) D.go(i);
+      else if (target.closest('.disc')) D.toast('Tap the disc: plays a preview of side A');
+      else D.open();
+    },
+  });
+  D.scrub(rail, (e) => { const box = rail.getBoundingClientRect(); return ((e.clientX - box.left) / box.width) * S.list.length - 0.5; });
+  D.start();
+})();
+</script>
+</body>
+</html>

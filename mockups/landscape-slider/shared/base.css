@@ -1,0 +1,78 @@
+/* Listening Room, as in src/styles.css: the page takes its colours from the cover in focus. */
+@font-face { font-family: 'Fraunces'; src: url('fonts/fraunces-latin-opsz-normal.woff2') format('woff2'); font-weight: 100 900; }
+@font-face { font-family: 'Figtree'; src: url('fonts/figtree-latin-wght-normal.woff2') format('woff2'); font-weight: 300 900; }
+
+:root {
+  --bg: #121c1d; --surface: #27302f; --line: #303a3b; --line-strong: #4d5556;
+  --text: #f0f1f1; --muted: #a6adad; --accent: #7fd1d9; --fill: #7fd1d9; --fill-ink: #121c1d; --glow: #44686b;
+  --art: none;
+  --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* The notch and home bar of a phone held sideways. A real phone reports its own. */
+  --safe-l: max(env(safe-area-inset-left, 0px), 44px);
+  --safe-r: max(env(safe-area-inset-right, 0px), 44px);
+  --safe-b: max(env(safe-area-inset-bottom, 0px), 16px);
+  color-scheme: dark;
+  transition: --bg .45s, --surface .45s, --line .45s, --line-strong .45s, --text .45s, --muted .45s, --accent .45s, --fill .45s, --fill-ink .45s, --glow .45s;
+}
+:root[data-mode='light'] { color-scheme: light; }
+@property --bg { syntax: '<color>'; inherits: true; initial-value: #121c1d; }
+@property --surface { syntax: '<color>'; inherits: true; initial-value: #27302f; }
+@property --line { syntax: '<color>'; inherits: true; initial-value: #303a3b; }
+@property --line-strong { syntax: '<color>'; inherits: true; initial-value: #4d5556; }
+@property --text { syntax: '<color>'; inherits: true; initial-value: #f0f1f1; }
+@property --muted { syntax: '<color>'; inherits: true; initial-value: #a6adad; }
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #7fd1d9; }
+@property --fill { syntax: '<color>'; inherits: true; initial-value: #7fd1d9; }
+@property --fill-ink { syntax: '<color>'; inherits: true; initial-value: #121c1d; }
+@property --glow { syntax: '<color>'; inherits: true; initial-value: #44686b; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+body { background: var(--bg); color: var(--text); font: 400 16px/1.35 var(--sans); font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+h1, h2, p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: .4; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+img { -webkit-user-drag: none; }
+.muted { color: var(--muted); }
+.accent { color: var(--accent); font-weight: 600; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.one-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.screen { position: relative; display: flex; flex-direction: column; width: 100%; height: 100dvh; padding: 0 var(--safe-r) var(--safe-b) var(--safe-l); overflow: hidden; }
+
+.head { position: relative; z-index: 30; display: flex; flex-shrink: 0; align-items: center; gap: 12px; height: 48px; padding-top: 2px; }
+.head h1 { flex: 1; min-width: 0; font: 600 20px/1.2 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.head h1 small { font: 400 15px var(--sans); color: var(--muted); }
+.segmented { display: flex; flex-shrink: 0; padding: 2px; border-radius: 26px; background: var(--surface); }
+.segmented button { position: relative; min-width: 52px; height: 40px; padding: 0 12px; border: 0; border-radius: 20px; background: transparent; font-size: 14px; font-weight: 600; transition: background-color .2s; }
+.segmented button::after { content: ''; position: absolute; inset: -4px 0; }
+.segmented button[aria-pressed='true'] { background: var(--fill); box-shadow: inset 0 0 0 1.5px var(--accent), 0 2px 6px rgb(0 0 0 / .18); color: var(--fill-ink); }
+.round { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--surface); color: var(--accent); }
+.round svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border: 1px solid transparent; border-radius: 22px; background: var(--surface); font-weight: 600; }
+.button.primary { background: var(--fill); border-color: var(--accent); color: var(--fill-ink); }
+.button:active, .round:active { opacity: .6; transform: scale(.96); }
+
+/* A record sleeve and the disc inside it. */
+.art { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 4px; filter: var(--art); pointer-events: none; }
+.disc { position: absolute; border-radius: 50%; box-shadow: 0 6px 18px rgb(0 0 0 / .45); filter: var(--art); }
+.disc > i { position: absolute; inset: 0; border-radius: 50%; }
+/* The grooves and label turn; the light on them stays where the lamp is. */
+.disc > i::after { content: ''; position: absolute; inset: 33%; border-radius: 50%; background: radial-gradient(circle, var(--bg) 0 7%, transparent 8%), conic-gradient(from 20deg, var(--label) 0 78%, color-mix(in srgb, var(--label) 70%, #000) 78% 86%, var(--label) 86%); }
+.disc::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 10deg, transparent 0 8%, rgb(255 255 255 / .16) 13%, transparent 19% 56%, rgb(255 255 255 / .1) 63%, transparent 70%); -webkit-mask: radial-gradient(circle, transparent 0 33%, #000 34%); mask: radial-gradient(circle, transparent 0 33%, #000 34%); }
+.is-spinning > i { animation: spin 3.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: absolute; z-index: 90; left: 50%; bottom: calc(var(--safe-b) + 8px); max-width: 80%; padding: 10px 18px; border-radius: 22px; background: var(--text); color: var(--bg); font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transform: translate(-50%, 12px); pointer-events: none; transition: .22s; }
+.toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+
+.turn-hint { display: none; }
+@media (orientation: portrait) {
+  .turn-hint { display: flex; position: fixed; z-index: 100; inset: 0; align-items: center; justify-content: center; padding: 32px; background: var(--bg); text-align: center; font: 600 20px/1.4 var(--serif); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

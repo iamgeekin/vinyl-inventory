@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>4 · Stacks</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .screen { padding-right: 0; }
+  .head { padding-right: var(--safe-r); }
+  .body { display: flex; flex: 1; min-height: 0; }
+  .now { display: flex; flex-shrink: 0; flex-direction: column; justify-content: space-between; width: 252px; }
+  .hero { position: relative; flex: 1; min-height: 0; touch-action: none; }
+  .card { position: absolute; left: 0; top: 50%; width: var(--size); height: var(--size); margin-top: calc(var(--size) / -2); cursor: pointer; animation: rise .35s cubic-bezier(.2, .8, .2, 1); }
+  .card .disc { inset: 3%; transform: translateX(40%); }
+  .card .sleeve { position: absolute; inset: 0; border-radius: 4px; box-shadow: 0 10px 26px rgb(0 0 0 / .45); }
+  @keyframes rise { from { opacity: 0; transform: translate(18px, 14px) scale(.9); } }
+  .names h2 { font: 600 20px/1.2 var(--serif); }
+  .names p { font-size: 13px; }
+  .foot { display: flex; align-items: center; gap: 8px; padding-top: 4px; }
+  .foot .button { flex: 1; }
+
+  .chart { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .view { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; cursor: grab; -webkit-mask: linear-gradient(90deg, transparent, #000 24px); mask: linear-gradient(90deg, transparent, #000 24px); }
+  .view:active { cursor: grabbing; }
+  .world { position: absolute; inset: 0 auto 0 0; }
+  .view.is-moving .world { transition: transform .38s cubic-bezier(.2, .8, .2, 1); }
+  /* A record lying flat, seen edge on. They fly to their new stacks when the sort changes. */
+  .slab { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; width: var(--w); height: var(--h); padding: 0 7px; overflow: hidden; border-radius: 3px; box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), inset 0 -2px 3px rgb(0 0 0 / .28); font-size: 10.5px; font-weight: 700; white-space: nowrap; filter: var(--art); transition: transform .7s cubic-bezier(.3, .9, .25, 1), box-shadow .2s; }
+  .slab span { min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .slab small { display: block; overflow: hidden; text-overflow: ellipsis; font-size: 9.5px; font-weight: 500; opacity: .85; }
+  .slab::after { content: ''; flex-shrink: 0; width: 4px; align-self: stretch; margin-left: auto; margin-right: -2px; background: var(--pop); }
+  .slab.is-focused { z-index: 3; box-shadow: 0 0 0 2.5px var(--text), 0 8px 20px rgb(0 0 0 / .5); transition-property: transform, box-shadow; }
+  .plinth { position: absolute; height: 3px; border-radius: 2px; background: var(--fill); box-shadow: 0 4px 14px color-mix(in srgb, var(--fill) 55%, transparent); }
+  .label { position: absolute; bottom: 0; height: 26px; border: 0; background: none; padding: 0; color: var(--muted); font: 600 13px/26px var(--serif); text-align: center; white-space: nowrap; cursor: pointer; }
+  .label small { margin-left: 5px; font: 500 11px var(--sans); }
+  .label.is-current { color: var(--accent); }
+
+  /* The same chart in miniature, to drag across. */
+  .map { position: relative; flex-shrink: 0; height: 44px; margin: 0 var(--safe-r) 0 24px; touch-action: none; cursor: pointer; }
+  .map .bars { position: absolute; inset: 6px 0 2px; display: flex; align-items: flex-end; gap: 3px; }
+  .map .bars i { border-radius: 2px 2px 0 0; background: var(--line-strong); transition: background .15s; }
+  .map .bars i.is-current { background: var(--fill); }
+  .map .window { position: absolute; top: 2px; bottom: 0; border: 1.5px solid var(--text); border-radius: 6px; opacity: .8; pointer-events: none; }
+  .bubble { position: absolute; z-index: 40; bottom: 50px; padding: 8px 16px; border-radius: 20px; background: var(--text); color: var(--bg); font: 700 20px var(--serif); white-space: nowrap; transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .map.is-scrubbing .bubble { opacity: 1; }
+</style>
+</head>
+<body>
+<main class="screen">
+  <header class="head">
+    <h1>Collection <small data-f="count"></small></h1>
+    <div class="segmented" data-sorts></div>
+    <button class="round" data-mode></button>
+  </header>
+  <div class="body">
+    <section class="now">
+      <div class="hero"></div>
+      <div class="names">
+        <h2 class="one-line" data-f="title"></h2>
+        <p class="muted one-line"><span data-f="artist"></span> · <span data-f="year"></span> · <span data-f="price"></span></p>
+      </div>
+      <div class="foot">
+        <button class="round" data-step="-1"></button>
+        <button class="button primary" data-open>Open</button>
+        <button class="round" data-step="1"></button>
+      </div>
+    </section>
+    <section class="chart">
+      <div class="view" role="group" aria-label="Stacks. Swipe sideways between stacks, up or down within one." tabindex="0"><div class="world"></div></div>
+      <div class="map"><div class="bars"></div><div class="window"></div><span class="bubble" data-f="mark"></span></div>
+    </section>
+  </div>
+</main>
+<script src="shared/records.js"></script>
+<script src="shared/core.js"></script>
+<script>
+(() => {
+  const D = window.Deck, S = D.state;
+  const view = document.querySelector('.view'), world = document.querySelector('.world'), hero = document.querySelector('.hero');
+  const map = document.querySelector('.map'), bars = map.querySelector('.bars'), frame = map.querySelector('.window'), bubble = map.querySelector('.bubble');
+  const WIDTH = 112, GAP = 14, BASE = 32, PAD = 40;
+  let stacks = [], where = [], slabs = new Map(), shown = null, pan = null, height = 15;
+
+  const stackX = (s) => PAD + s * (WIDTH + GAP);
+  const camera = () => {
+    const w = view.clientWidth, total = stackX(stacks.length) + PAD;
+    const wanted = pan ?? stackX(where[S.index].s) + WIDTH / 2 - w / 2;
+    return D.clamp(wanted, 0, Math.max(0, total - w));
+  };
+
+  function build() {
+    stacks = [];
+    where = S.list.map((r, i) => {
+      const name = D.bucket(r);
+      if (!stacks.length || stacks[stacks.length - 1].name !== name) stacks.push({ name, items: [] });
+      const stack = stacks[stacks.length - 1];
+      stack.items.push(i);
+      return { s: stacks.length - 1, level: stack.items.length - 1 };
+    });
+    const tallest = Math.max(...stacks.map((s) => s.items.length));
+    height = D.clamp(Math.floor((view.clientHeight - BASE - 14) / tallest), 9, 38);
+
+    world.querySelectorAll('.plinth, .label').forEach((el) => el.remove());
+    stacks.forEach((stack, s) => {
+      world.insertAdjacentHTML('beforeend', `<div class="plinth" style="left:${stackX(s) - 3}px;bottom:${BASE - 6}px;width:${WIDTH + 6}px"></div><button type="button" class="label" data-s="${s}" style="left:${stackX(s) - 6}px;width:${WIDTH + 12}px">${stack.name}<small>${stack.items.length}</small></button>`);
+    });
+    S.list.forEach((r, i) => {
+      let el = slabs.get(r.id);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'slab';
+        el.dataset.id = r.id;
+        el.style.cssText = `background:${r.spine};color:${D.inkOn(r.spine)};--pop:${r.pop}`;
+        el.innerHTML = '<span></span>';
+        world.append(el);
+        slabs.set(r.id, el);
+      }
+      el.dataset.i = i;
+      // A thick enough record has room for the artist under the title.
+      el.firstChild.innerHTML = height >= 28 ? `${r.title}<small>${r.artist}</small>` : height >= 13 ? r.title : '';
+      const { s, level } = where[i];
+      // A real stack is never perfectly square.
+      const nudge = ((r.title.length * 7) % 7) - 3;
+      el.style.setProperty('--w', `${WIDTH - 4}px`);
+      el.style.setProperty('--h', `${height - 1}px`);
+      el.dataset.x = stackX(s) + 2 + nudge;
+      el.dataset.y = -(BASE + level * height);
+      el.style.transitionDelay = `${(level * 12) + (s % 5) * 20}ms`;
+    });
+    world.style.width = `${stackX(stacks.length) + PAD}px`;
+    const most = Math.max(...stacks.map((s) => s.items.length));
+    bars.innerHTML = stacks.map((s) => `<i style="flex:1;height:${Math.max(12, (s.items.length / most) * 100)}%"></i>`).join('');
+    pan = null;
+    place();
+  }
+
+  /** Lifts the focused record a little out of its stack, towards the viewer. */
+  function place() {
+    for (const el of slabs.values()) {
+      const i = +el.dataset.i, focused = i === S.index;
+      el.classList.toggle('is-focused', focused);
+      el.style.transform = `translate(${+el.dataset.x - (focused ? 12 : 0)}px, ${el.dataset.y}px) scale(${focused ? 1.08 : 1})`;
+    }
+    const current = where[S.index].s;
+    world.querySelectorAll('.label').forEach((el) => el.classList.toggle('is-current', +el.dataset.s === current));
+    [...bars.children].forEach((el, s) => el.classList.toggle('is-current', s === current));
+    deal();
+  }
+
+  function deal() {
+    const r = D.record();
+    if (shown === r.id) return;
+    shown = r.id;
+    const size = Math.round(D.clamp(hero.clientHeight - 14, 120, 176));
+    hero.innerHTML = `<div class="card" data-id="${r.id}" style="--size:${size}px">${D.discHtml(r, 'is-spinning')}<div class="sleeve"><img class="art" src="${r.img}" alt="${r.title} cover"></div></div>`;
+  }
+
+  function draw() {
+    const x = camera();
+    world.style.transform = `translateX(${-x}px)`;
+    const total = stackX(stacks.length) + PAD, w = bars.clientWidth;
+    frame.style.left = `${(x / total) * w}px`;
+    frame.style.width = `${Math.min(1, view.clientWidth / total) * w}px`;
+    const s = where[S.index].s;
+    bubble.textContent = stacks[s].name;
+    bubble.style.left = `${D.clamp(((s + 0.5) / stacks.length) * w, 36, w - 36)}px`;
+  }
+
+  /** The record at the same height in another stack, or its top one. */
+  const inStack = (s, level) => stacks[s].items[Math.min(level, stacks[s].items.length - 1)];
+  const choose = (i) => { D.stop(); D.setP(i); };
+
+  // Sideways pans the stacks; up and down climbs the one in the middle.
+  let g = null;
+  view.addEventListener('pointerdown', (e) => {
+    g = { x: e.clientX, y: e.clientY, from: camera(), at: S.index, ...where[S.index], axis: null, target: e.target, time: e.timeStamp, lx: e.clientX, v: 0 };
+    view.classList.remove('is-moving');
+    // Press and hold a record for its menu.
+    const held = g, id = e.target.closest('.slab')?.dataset.id;
+    if (id) held.hold = setTimeout(() => {
+      if (g !== held || held.axis) return;
+      g = null;
+      D.toast(`Menu: Open · Edit · Delete “${window.RECORDS.find((r) => r.id === id).title}”`);
+    }, 550);
+  });
+  view.addEventListener('pointermove', (e) => {
+    if (!g) return;
+    if (e.pointerType === 'mouse' && !e.buttons) { g = null; return; }
+    const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    if (!g.axis) {
+      if (Math.hypot(dx, dy) < 7) return;
+      g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      clearTimeout(g.hold);
+      view.setPointerCapture(e.pointerId);
+    }
+    if (g.axis === 'y') {
+      const items = stacks[g.s].items;
+      choose(items[D.clamp(g.level - Math.round(dy / Math.max(14, height)), 0, items.length - 1)]);
+    } else {
+      g.v = (e.clientX - g.lx) / Math.max(1, e.timeStamp - g.time);
+      g.lx = e.clientX; g.time = e.timeStamp;
+      pan = g.from - dx;
+      const s = D.clamp(Math.round((camera() + view.clientWidth / 2 - PAD - WIDTH / 2) / (WIDTH + GAP)), 0, stacks.length - 1);
+      // At either end the camera stops, so the finger carries on to the last stacks.
+      const edge = pan < 0 ? Math.max(0, Math.round((camera() + view.clientWidth / 2 + pan - PAD - WIDTH / 2) / (WIDTH + GAP))) : s;
+      if (edge !== where[S.index].s) choose(inStack(D.clamp(edge, 0, stacks.length - 1), g.level));
+      else draw();
+    }
+  });
+  const end = (e) => {
+    if (!g) return;
+    const done = g;
+    g = null;
+    clearTimeout(done.hold);
+    view.classList.add('is-moving');
+    if (done.axis === 'x') {
+      pan = null;
+      const flung = e.timeStamp - done.time < 80 ? Math.round(-done.v * 1.6) : 0;
+      if (flung) choose(inStack(D.clamp(where[S.index].s + flung, 0, stacks.length - 1), done.level));
+      draw();
+    } else if (!done.axis && e.type === 'pointerup') {
+      const slab = done.target.closest('.slab'), label = done.target.closest('.label');
+      if (slab && +slab.dataset.i === S.index) D.open();
+      else if (slab) choose(+slab.dataset.i);
+      else if (label) choose(inStack(+label.dataset.s, done.level));
+    }
+  };
+  view.addEventListener('pointerup', end);
+  view.addEventListener('pointercancel', end);
+  view.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    view.classList.add('is-moving');
+    pan = null;
+    if (Math.abs(e.deltaX) + Math.abs(e.deltaY) > 3) D.go(S.index + Math.sign(e.deltaX || e.deltaY), 40);
+  }, { passive: false });
+
+  D.drag(hero, {
+    perItem: 70,
+    onTap: (target) => {
+      if (target.closest('.disc')) D.toast('Tap the disc: plays a preview of side A');
+      else if (target.closest('.card')) D.open();
+    },
+  });
+  D.scrub(map, (e) => {
+    const b = bars.getBoundingClientRect();
+    return stacks[D.clamp(Math.floor(((e.clientX - b.left) / b.width) * stacks.length), 0, stacks.length - 1)].items[0];
+  }, { onStart: () => view.classList.add('is-moving') });
+
+  D.on('sort', () => { view.classList.add('is-moving'); build(); });
+  D.on('focus', () => { place(); if (!g || g.axis !== 'x') { pan = null; view.classList.add('is-moving'); } });
+  D.on('frame', draw);
+  D.start();
+})();
+</script>
+</body>
+</html>

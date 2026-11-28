@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sampleRecords } from '../src/data/sample';
 import { barcodeVariants, hasValidCheckDigit } from '../src/lookup/barcode';
-import { findOwned, lookupBarcode } from '../src/lookup/lookup';
+import { quickRecord } from '../src/data/quickRecord';
+import { findOwned, lookupBarcode, searchDiscogs } from '../src/lookup/lookup';
 import { candidateFromDiscogs, draftFromDiscogs, draftFromItunes, draftFromMb, pressingFromFormats } from '../src/lookup/mapRelease';
 import { sameAlbum } from '../src/lookup/text';
 import { signature, similarity } from '../src/scan/imageRank';
@@ -177,5 +178,40 @@ describe('cover photo reading', () => {
     const other = image((x, y) => [240, y < 18 ? 220 : 20, x]);
     expect(similarity(a, a)).toBeCloseTo(1);
     expect(similarity(a, same)).toBeGreaterThan(similarity(a, other));
+  });
+});
+
+describe('searching Discogs from the search page', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const stub = () => {
+    const asked: URLSearchParams[] = [];
+    vi.stubGlobal('fetch', async (url: string) => {
+      asked.push(new URL(url).searchParams);
+      return new Response(JSON.stringify({ results: [{ id: 1, title: 'Artist - Album', format: ['Vinyl'] }] }));
+    });
+    return asked;
+  };
+
+  it('searches a barcode as one', async () => {
+    const asked = stub();
+    await searchDiscogs('5 012394 144777', '');
+    expect(asked[0].get('barcode')).toBe('5012394144777');
+  });
+
+  it('searches anything else, numbers in titles included, as words', async () => {
+    const asked = stub();
+    await searchDiscogs('1989', '');
+    await searchDiscogs('SHVL 804', '');
+    expect(asked.map((p) => p.get('q'))).toEqual(['1989', 'SHVL 804']);
+  });
+
+  it('makes a complete record from a result, filling gaps from the search listing', () => {
+    const candidate = candidateFromDiscogs({ id: 7, title: 'Artist - Album', barcode: ['5012394144777'] });
+    const record = quickRecord(draftFromDiscogs({ id: 7 }), candidate, 'SGD');
+    expect(record).toMatchObject({ artist: 'Artist', title: 'Album', barcode: '5012394144777' });
+    expect(record.purchase).toMatchObject({ price: null, currency: 'SGD' });
+    expect(record.links.discogsId).toBe(7);
+    expect(record.id).not.toBe('');
   });
 });

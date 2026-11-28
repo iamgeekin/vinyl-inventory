@@ -46,11 +46,14 @@ export interface VinylRecord {
 
 export type SortKey = 'artist' | 'title' | 'year' | 'purchased' | 'price';
 export type ShelfView = 'spines' | 'covers';
+/** How the shelf looks on a phone held sideways. */
+export type LandscapeLayout = 'pullout' | 'crate';
 
 export interface Settings {
   currency: string;
   discogsToken: string;
   shelfView: ShelfView;
+  landscapeLayout: LandscapeLayout;
   sort: SortKey;
   appearance: Appearance;
 }
@@ -78,6 +81,7 @@ export function defaultSettings(): Settings {
     currency: guessCurrency(globalThis.navigator?.language),
     discogsToken: '',
     shelfView: 'spines',
+    landscapeLayout: 'pullout',
     sort: 'artist',
     appearance: 'auto',
   };

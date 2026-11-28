@@ -27,7 +27,7 @@ function Layout() {
   const { error, clearError, records, settings, settingsReady } = useApp();
   const { setAppearance } = useTheme();
   const sideways = useMediaQuery(PHONE_LANDSCAPE);
-  // The record page, the form and the sideways slider use the full height.
+  // The record page, the form and the sideways shelf use the full height.
   const showTabs = !/^\/(new|record\/)/.test(pathname) && !(sideways && pathname === '/' && records.length > 0);
 
   useEffect(() => {

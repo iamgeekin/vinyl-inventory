@@ -97,6 +97,16 @@ Always check the chosen pressing: edition and colour are guessed from the Discog
 
 Saved cover thumbnails come from Cover Art Archive, iTunes or your own photo. Discogs pictures can only be linked to, so they may not show offline.
 
+## Add from the search page
+
+The switch beside the **Search** title chooses between **Collection** and **Discogs**.
+
+- **Discogs search:** vinyl releases by artist, album, catalogue number or barcode. It starts when you press Search or Return, or switch over with something already typed, not on every keystroke.
+- **Add:** saves that release to your collection at once, with its tracklist, pressing details and artwork where one can be saved. Price, date, store and condition are left empty; add them later with **Edit**.
+- **Review first:** tap the result itself to open the filled-in form before saving.
+- **Already owned:** results are marked, and adding one again asks first.
+- Only this app's collection changes. To copy records to your Discogs account, see **Send your collection to Discogs**.
+
 ## Original release year
 
 A record's page shows when the album first came out, which for a reissue differs from the year of your pressing.
@@ -136,7 +146,7 @@ The "Listening Room" direction: a quiet interface where the cover art provides t
 
 ### Colour from the cover
 
-The page takes two colours from the cover of the record in focus: the one pulled out on the shelf, centred in the slider, or open on its own page. Other screens keep the last one.
+The page takes two colours from the cover of the record in focus: the one pulled out on the shelf, in focus on the sideways shelf, or open on its own page. Other screens keep the last one.
 
 - **Primary:** the colour covering most of the cover fills the page. A colour wins over black, white or grey when they cover about as much.
 - **Secondary:** the most prominent clearly different colour marks buttons, the selected tab, the shelf ledge, the disc label and the glow behind the artwork.
@@ -175,7 +185,14 @@ Everything a gesture does can also be done with buttons. Going back is the phone
 
 ### Sideways view
 
-Turn a phone to landscape on the shelf to get the cover slider: the focused record is enlarged with its disc slid out. Swipe, tap a side cover, use the arrows or drag the bar underneath, and sort by artist, title, year, purchase date or price. The phone's rotation lock must be off. It appears when the screen is landscape and no more than 540 px tall.
+Turn a phone to landscape on the shelf to get the sideways view. The phone's rotation lock must be off. It appears when the screen is landscape and no more than 540 px tall. Pick its layout under **Settings > Landscape layout**; the choice stays on that device.
+
+| Layout | What you see | Moving through | Jumping |
+|---|---|---|---|
+| **Pull-out shelf** (default) | A shelf of spines, with the record in focus swung out as its cover and disc | Swipe sideways | Drag along the strip of spine colours underneath |
+| **Crate dig** | Sleeves in a crate, the front one with its disc slid out and its details beside it | Swipe down for the next, up to go back | Drag the index down the right edge |
+
+In both, tap another record to bring it into focus, tap the cover or **Open** to open it, press and hold for the menu, and use the arrow buttons or arrow keys to step. Sort by artist, title, year, purchase date or price; the record in focus stays in focus. Divider cards on the shelf, and tabs and the index in the crate, mark each letter, year, quarter or price band.
 
 A record's page has a sideways layout too, under the same condition. The back button, **Edit**, the cover with its disc slid out, and the title and edition stay on the left, so the record you opened is always in view. The purchase tiles, tracklist, notes and details scroll on the right.
 
@@ -191,4 +208,4 @@ A record's page has a sideways layout too, under the same condition. The back bu
 | `src/scan` | Barcode camera, text reading, artwork and thumbnails |
 | `src/search` | Collection search |
 | `src/theme` | Colours from covers, light, dark and night |
-| `src/pages`, `src/components` | Screens, shelf and slider |
+| `src/pages`, `src/components` | Screens and shelves |

@@ -45,6 +45,50 @@ export function sortMark(record: VinylRecord, key: SortKey): string {
   return new Date(Number(date[1]), Number(date[2]) - 1).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 }
 
+/** The nearest 1, 2 or 5 times a power of ten that is no smaller than `value`. */
+function roundStep(value: number): number {
+  if (value <= 1) return 1;
+  const power = 10 ** Math.floor(Math.log10(value));
+  return [1, 2, 5, 10].find((m) => value <= m * power)! * power;
+}
+
+function wholeMoney(value: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+  } catch {
+    return `${currency} ${value}`;
+  }
+}
+
+/**
+ * The group each record is filed under in the chosen order, for divider cards and
+ * the index: a letter, a year, a quarter such as "Q2 ’26", or a price band such
+ * as "$30+".
+ */
+export function groupLabels(records: VinylRecord[], key: SortKey): string[] {
+  if (key === 'price') {
+    const priced = records.filter((r) => r.purchase.price !== null);
+    // Round bands in whatever the prices are counted in, tens of dollars or thousands of yen.
+    const step = roundStep(priced.reduce((top, r) => Math.max(top, r.purchase.price!), 0) / 8);
+    const mixed = new Set(priced.map((r) => r.purchase.currency)).size > 1;
+    return records.map(({ purchase: { price, currency } }) => {
+      if (price === null) return '—';
+      const low = Math.floor(price / step) * step;
+      return `${mixed ? low : wholeMoney(low, currency)}+`;
+    });
+  }
+  return records.map((r) => {
+    if (key === 'year') return sortMark(r, key);
+    if (key === 'purchased') {
+      const date = /^\d{2}(\d{2})-(\d{2})/.exec(r.purchase.date);
+      return date ? `Q${Math.ceil(Number(date[2]) / 3)} ’${date[1]}` : '—';
+    }
+    // Accented letters are filed with their plain ones, as the sort order has them.
+    const initial = sortMark(r, key).normalize('NFD')[0];
+    return /\p{L}/u.test(initial) ? initial : '#';
+  });
+}
+
 export interface Filter {
   genre: string;
   specialOnly: boolean;

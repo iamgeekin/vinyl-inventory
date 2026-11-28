@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3 · Spine Wheel</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .screen { flex-direction: row; padding: 0 0 0 var(--safe-l); }
+  /* The sort order runs down the left edge, leaving the full height to the records. */
+  .side { position: relative; z-index: 30; display: flex; flex-shrink: 0; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 70px; padding-bottom: var(--safe-b); }
+  .side .segmented { flex-direction: column; border-radius: 24px; }
+  .side .segmented button { min-width: 62px; height: 42px; padding: 0 4px; font-size: 13px; }
+  .side .segmented button::after { inset: 0; }
+
+  .now { position: relative; z-index: 5; display: flex; flex-shrink: 0; flex-direction: column; width: clamp(250px, 38vw, 322px); padding: 6px 0 var(--safe-b) 14px; }
+  .now > h1 { font: 600 18px/1.2 var(--serif); }
+  .now > h1 small { font: 400 14px var(--sans); color: var(--muted); }
+  .hero { position: relative; flex: 1; min-height: 0; touch-action: pan-y; }
+  .card { position: absolute; left: 0; top: 50%; width: var(--size); height: var(--size); margin-top: calc(var(--size) / -2); cursor: pointer; }
+  .card .disc { inset: 3%; transform: translateX(40%); }
+  .card .sleeve { position: absolute; inset: 0; border-radius: 4px; box-shadow: 0 10px 26px rgb(0 0 0 / .45); }
+  .card { animation: deal .42s cubic-bezier(.2, .8, .2, 1); }
+  .card .disc { animation: slide .5s .08s cubic-bezier(.2, .8, .2, 1) backwards; }
+  @keyframes deal { from { opacity: 0; transform: translate(46px, var(--from, 0)) scale(.86) rotate(var(--lean, 0deg)); } }
+  @keyframes slide { from { transform: translateX(0); } }
+  .names h2 { font: 600 20px/1.2 var(--serif); }
+  .names p { font-size: 13px; }
+  .foot { display: flex; align-items: center; gap: 10px; }
+  .foot .names { flex: 1; min-width: 0; }
+
+  .wheel { position: relative; flex: 1; min-width: 0; overflow: hidden; touch-action: none; cursor: grab; }
+  .wheel:active { cursor: grabbing; }
+  .hub { position: absolute; top: 50%; border-radius: 50%; border: 1.5px solid var(--line-strong); background: radial-gradient(circle closest-side, transparent 62%, color-mix(in srgb, var(--glow) 28%, transparent) 100%); pointer-events: none; }
+  .spine { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 10px; height: 31px; padding: 0 12px 0 14px; overflow: hidden; border-radius: 4px 0 0 4px; box-shadow: inset 0 1px 0 rgb(255 255 255 / .2), inset 0 -3px 5px rgb(0 0 0 / .25), -3px 3px 10px rgb(0 0 0 / .3); transform-origin: 0 50%; white-space: nowrap; filter: var(--art); }
+  .spine i { flex-shrink: 0; width: 5px; align-self: stretch; margin: 0 2px 0 -6px; }
+  .spine b { flex-shrink: 0; max-width: 190px; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+  .spine span { overflow: hidden; text-overflow: ellipsis; font-size: 12px; opacity: .85; }
+  .spine.is-focused { box-shadow: 0 0 0 2.5px var(--text), -6px 6px 18px rgb(0 0 0 / .45); }
+  .group { position: absolute; left: 0; top: 0; width: 66px; margin: -9px 0 0 -2px; color: var(--accent); font: 700 13px/18px var(--serif); text-align: right; transform-origin: 100% 50%; white-space: nowrap; pointer-events: none; }
+  /* The groove between the record in the hand and its spine on the wheel. */
+  .pointer { position: absolute; z-index: 40; top: 50%; height: 2.5px; margin-top: -1px; background: var(--text); pointer-events: none; }
+  .pointer::before { content: ''; position: absolute; left: -4px; top: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--text); }
+
+  .fade { position: absolute; z-index: 35; left: 0; right: 0; height: 44px; pointer-events: none; }
+  .fade.top { top: 0; background: linear-gradient(var(--bg), transparent); }
+  .fade.bottom { bottom: 0; background: linear-gradient(transparent, var(--bg)); }
+
+  /* A bar down the outer edge: the whole collection from top to bottom. */
+  .rim { position: absolute; z-index: 50; top: 18px; bottom: calc(var(--safe-b) + 6px); right: 6px; width: 44px; touch-action: none; cursor: pointer; }
+  .rim .track { position: absolute; top: 0; bottom: 0; left: 18px; width: 8px; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; filter: var(--art); box-shadow: 0 0 0 1px var(--line-strong); }
+  .rim .track i { flex: 1; }
+  .rim .knob { position: absolute; left: 11px; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; border: 3px solid var(--text); background: var(--fill); box-shadow: 0 2px 8px rgb(0 0 0 / .45); }
+  .bubble { position: absolute; right: 40px; padding: 8px 16px; border-radius: 20px; background: var(--text); color: var(--bg); font: 700 22px var(--serif); white-space: nowrap; transform: translateY(-50%); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .rim.is-scrubbing .bubble { opacity: 1; }
+</style>
+</head>
+<body>
+<main class="screen">
+  <aside class="side"><div class="segmented" data-sorts></div><button class="round" data-mode></button></aside>
+  <section class="now">
+    <h1>Collection <small data-f="count"></small></h1>
+    <div class="hero"></div>
+    <div class="foot">
+      <div class="names">
+        <h2 class="one-line" data-f="title"></h2>
+        <p class="muted one-line"><span data-f="artist"></span> · <span data-f="year"></span> · <span data-f="price"></span></p>
+      </div>
+      <button class="button primary" data-open>Open</button>
+    </div>
+  </section>
+  <div class="wheel" role="group" aria-label="Record wheel. Swipe up or down." tabindex="0">
+    <div class="hub"></div>
+    <div class="spines"></div>
+    <div class="pointer"></div>
+    <div class="fade top"></div><div class="fade bottom"></div>
+  </div>
+  <div class="rim" aria-label="Position in collection">
+    <div class="track"></div><div class="knob"></div><span class="bubble" data-f="mark"></span>
+  </div>
+</main>
+<script src="shared/records.js"></script>
+<script src="shared/core.js"></script>
+<script>
+(() => {
+  const D = window.Deck, S = D.state;
+  const hero = document.querySelector('.hero'), wheel = document.querySelector('.wheel');
+  const box = document.querySelector('.spines'), hub = document.querySelector('.hub'), pointer = document.querySelector('.pointer');
+  const rim = document.querySelector('.rim'), knob = rim.querySelector('.knob'), bubble = rim.querySelector('.bubble');
+  const RADIUS = 560, STEP = 3.55; // degrees between neighbouring spines
+  let cache = new Map(), shown = null, previous = 0;
+
+  function build() {
+    box.innerHTML = '';
+    cache = new Map();
+    shown = null;
+    rim.querySelector('.track').innerHTML = S.list.map((r) => `<i style="background:${r.spine}"></i>`).join('');
+    deal();
+  }
+
+  /** Puts the record in focus in the hand, arriving from the wheel. */
+  function deal() {
+    const r = D.record();
+    if (shown === r.id) return;
+    const down = S.index >= previous;
+    previous = S.index;
+    shown = r.id;
+    const size = Math.round(D.clamp(Math.min(hero.clientHeight - 14, hero.clientWidth / 1.42, 215), 130, 215));
+    hero.innerHTML = `<div class="card" data-id="${r.id}" style="--size:${size}px;--from:${down ? 30 : -30}px;--lean:${down ? 5 : -5}deg">${D.discHtml(r, 'is-spinning')}<div class="sleeve"><img class="art" src="${r.img}" alt="${r.title} cover"></div></div>`;
+  }
+
+  function spine(i) {
+    let item = cache.get(i);
+    if (!item) {
+      const r = S.list[i];
+      const el = document.createElement('div');
+      el.className = 'spine';
+      el.dataset.i = i;
+      el.dataset.id = r.id;
+      el.style.background = r.spine;
+      el.style.color = D.inkOn(r.spine);
+      el.innerHTML = `<i style="background:${r.pop}"></i><b>${r.title}</b><span>${r.artist}</span>`;
+      box.append(el);
+      let group = null;
+      if (i === 0 || D.bucket(r) !== D.bucket(S.list[i - 1])) {
+        group = document.createElement('div');
+        group.className = 'group';
+        group.textContent = D.bucket(r);
+        box.append(group);
+      }
+      item = { el, group };
+      cache.set(i, item);
+    }
+    return item;
+  }
+
+  function draw() {
+    const w = wheel.clientWidth, h = wheel.clientHeight, p = S.p, cy = h / 2;
+    const left = w < 300 ? 56 : 78; // where the rim of the wheel crosses the middle
+    const cx = left + RADIUS;
+    hub.style.cssText = `left:${left + 270}px;width:${2 * (RADIUS - 270)}px;height:${2 * (RADIUS - 270)}px;margin-top:${-(RADIUS - 270)}px`;
+    const from = Math.max(0, Math.floor(p) - 8), to = Math.min(S.list.length - 1, Math.ceil(p) + 8);
+    for (const [i, item] of cache) { const out = i < from || i > to; item.el.hidden = out; if (item.group) item.group.hidden = out; }
+    for (let i = from; i <= to; i++) {
+      const { el, group } = spine(i), d = i - p;
+      el.hidden = false;
+      const focus = Math.max(0, 1 - Math.abs(d));
+      // Neighbours move apart to give the focused spine its room.
+      const angle = (d * STEP + D.clamp(d, -1, 1) * 0.9) * (Math.PI / 180);
+      const radius = RADIUS + focus * 40; // the focused spine is drawn out towards the cover
+      const x = cx - radius * Math.cos(angle), y = cy + radius * Math.sin(angle);
+      const height = 31 + focus * 11;
+      el.style.height = `${height}px`;
+      el.style.width = `${w + 80}px`;
+      el.style.transform = `translate(${x}px, ${y - height / 2}px) rotate(${-angle}rad)`;
+      el.style.zIndex = focus > 0.5 ? 30 : 20 - Math.round(Math.abs(d));
+      el.classList.toggle('is-focused', Math.abs(d) < 0.5);
+      if (group) {
+        group.hidden = false;
+        group.style.transform = `translate(${x - 72}px, ${y}px) rotate(${-angle}rad)`;
+        group.style.opacity = focus > 0.2 ? 0 : 1;
+      }
+    }
+    // From the edge of the disc to the focused spine.
+    const reach = left - 40;
+    pointer.style.left = '4px';
+    pointer.style.width = `${Math.max(0, reach - 4)}px`;
+    const at = (D.clamp(p, 0, S.list.length - 1) / (S.list.length - 1)) * rim.clientHeight;
+    knob.style.top = `${at}px`;
+    bubble.style.top = `${D.clamp(at, 22, rim.clientHeight - 22)}px`;
+  }
+
+  D.on('sort', build);
+  D.on('frame', draw);
+  D.on('focus', deal);
+  D.drag(wheel, {
+    axis: 'y', perItem: 34,
+    onTap: (target) => {
+      const el = target.closest('.spine');
+      if (!el) return;
+      if (+el.dataset.i === S.index) D.open();
+      else D.go(+el.dataset.i);
+    },
+  });
+  // A sideways swipe on the cover also steps through.
+  D.drag(hero, {
+    perItem: 90,
+    onTap: (target) => {
+      if (target.closest('.disc')) D.toast('Tap the disc: plays a preview of side A');
+      else if (target.closest('.card')) D.open();
+    },
+  });
+  D.scrub(rim, (e) => { const b = rim.getBoundingClientRect(); return ((e.clientY - b.top) / b.height) * (S.list.length - 1); });
+  D.start();
+})();
+</script>
+</body>
+</html>

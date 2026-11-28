@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landscape shelf: five options</title>
+<style>
+  @font-face { font-family: 'Fraunces'; src: url('shared/fonts/fraunces-latin-opsz-normal.woff2') format('woff2'); font-weight: 100 900; }
+  @font-face { font-family: 'Figtree'; src: url('shared/fonts/figtree-latin-wght-normal.woff2') format('woff2'); font-weight: 300 900; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #17181a; color: #ececee; font: 400 16px/1.5 'Figtree', system-ui, sans-serif; }
+  header, section { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header { padding-top: 32px; }
+  h1, h2 { margin: 0; font-family: 'Fraunces', Georgia, serif; line-height: 1.2; }
+  h1 { font-size: 34px; }
+  h2 { font-size: 24px; }
+  p { margin: 8px 0; max-width: 70ch; }
+  a { color: #8fd6de; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+  button, .link { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: #2a2c30; color: inherit; font: 600 14px 'Figtree', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+  button[aria-pressed='true'] { background: #ececee; color: #17181a; }
+  section { margin-top: 44px; }
+  .title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  /* The phone, drawn at its real size and shrunk to fit. */
+  .phone { position: relative; width: 100%; max-width: 864px; aspect-ratio: 864 / 410; margin: 14px 0; container-type: inline-size; }
+  .shell { position: absolute; left: 0; top: 0; width: 864px; height: 410px; padding: 10px; border-radius: 56px; background: #050506; box-shadow: 0 0 0 1.5px #4a4c52, 0 18px 50px rgb(0 0 0 / .5); transform-origin: 0 0; }
+  .shell iframe { display: block; width: 844px; height: 390px; border: 0; border-radius: 46px; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: 15px; }
+  dt { font-weight: 700; color: #a9abb1; }
+  dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid #33353a; text-align: left; vertical-align: top; }
+  footer { height: 60px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Landscape shelf: five options</h1>
+  <p>Each phone below is live at 844 × 390. Drag inside it, tap spines, change the sort order and drag the scrub bar. With a mouse, drag as you would a finger; the wheel or trackpad scrolls too. All 60 records are invented, and nothing is saved.</p>
+  <nav aria-label="Appearance of all phones">
+    <button type="button" data-all="light">Light</button>
+    <button type="button" data-all="dark" aria-pressed="true">Dark</button>
+    <button type="button" data-all="night">Night</button>
+    <a class="link" href="screenshots/overview.png">All five as one picture</a>
+  </nav>
+</header>
+<div id="options"></div>
+<section>
+  <h2>Side by side</h2>
+  <table>
+    <thead><tr><th></th><th>Pull-Out Shelf</th><th>Crate Dig</th><th>Spine Wheel</th><th>Stacks</th><th>Needle Drop</th></tr></thead>
+    <tbody>
+      <tr><th>Others shown as</th><td>Upright spines only</td><td>Sleeve tops</td><td>Flat spines only</td><td>Flat spines only</td><td>Thin spines only</td></tr>
+      <tr><th>Spines in view</th><td>About 16</td><td>None (7 edges)</td><td>About 12</td><td>About 10–50, by sort order</td><td>All 60</td></tr>
+      <tr><th>Titles readable</th><td>Sideways</td><td>Focused only</td><td>Level, best</td><td>Level, small</td><td>Near the focus</td></tr>
+      <tr><th>Swipe direction</th><td>Sideways</td><td>Up and down</td><td>Up and down</td><td>Both</td><td>Sideways</td></tr>
+      <tr><th>Sort order is shown by</th><td>Divider cards</td><td>Tabs and side index</td><td>Margin labels</td><td>The shape of the stacks</td><td>Ruler</td></tr>
+      <tr><th>Likely effort to build</th><td>Medium</td><td>Medium</td><td>Medium</td><td>High</td><td>Low to medium</td></tr>
+    </tbody>
+  </table>
+</section>
+<footer></footer>
+<script>
+const OPTIONS = [
+  ['1-pull-out', '1 · Pull-Out Shelf', 'The focused record swings out of the shelf as a cover with its disc slid out. Everything else stays a spine.', {
+    Scrolling: 'Swipe the shelf sideways. It follows your finger, carries on when flicked and settles on a record.',
+    Focusing: 'The spine turns into the sleeve as it reaches the middle, and neighbours move aside. Tap any spine to pull it out; tap the cover to open it; hold for the menu.',
+    Sorting: 'The shelf re-orders with the focused record kept in the middle. Record-shop divider cards mark each letter, year, quarter or price band.',
+    Scrubbing: 'A strip of all spine colours underneath. Drag it and a bubble shows the letter, year or price you are at.',
+  }],
+  ['2-crate-dig', '2 · Crate Dig', 'Flip through a crate: sleeves tip towards you one at a time, with the rest waiting behind.', {
+    Scrolling: 'Swipe down to flip forward, up to flip back, as in a record shop.',
+    Focusing: 'The front sleeve stands upright and its disc slides out. Tap a sleeve edge behind to jump to it. Details sit beside the crate.',
+    Sorting: 'The crate re-orders around the focused record. Tabs stick up where a group starts and the crate front names the current one.',
+    Scrubbing: 'An index down the right edge, like iPhone Contacts, jumps to the start of a group.',
+  }],
+  ['3-spine-wheel', '3 · Spine Wheel', 'Spines fan around a large wheel. The one at the pointer is the record in your hand.', {
+    Scrolling: 'Swipe the wheel up or down; spines travel one for one with your finger. Swiping the cover sideways also steps.',
+    Focusing: 'The focused spine is drawn out and outlined, and its cover is dealt in on the left with the disc spinning.',
+    Sorting: 'Buttons run down the left edge, so no top bar is needed. Group names are written at the rim of the wheel.',
+    Scrubbing: 'A coloured bar down the right edge covers the whole collection.',
+  }],
+  ['4-stacks', '4 · Stacks', 'Records lie in piles by letter, year, quarter or price, so the shelf is also a chart of the collection.', {
+    Scrolling: 'Swipe sideways from pile to pile; swipe up or down to climb a pile. The arrows walk through every record in order.',
+    Focusing: 'Tap a record to lift it out; its cover and disc show on the left. Tap it again to open it.',
+    Sorting: 'The records fly into new piles. Each pile is labelled with its name and count; tap a label to go there.',
+    Scrubbing: 'A miniature bar chart underneath: drag across it to move between piles.',
+  }],
+  ['5-needle-drop', '5 · Needle Drop', 'The whole collection fits along the bottom. Spines near your finger widen like a lens, and the chosen record goes on the deck.', {
+    Scrolling: 'Nothing scrolls. Swipe the top half for the next or previous record.',
+    Focusing: 'Tap a spine, or drag along them. When you stop, the disc slides out, spins and the arm drops.',
+    Sorting: 'Spines re-order in place, with a ruler showing where each group begins.',
+    Scrubbing: 'The shelf is the scrubber. Suits up to about 150 records; beyond that spines get under 3 px and it would need to group them.',
+  }],
+];
+const options = document.getElementById('options');
+let mode = 'dark';
+options.innerHTML = OPTIONS.map(([file, title, summary, notes]) => `
+  <section>
+    <div class="title"><h2>${title}</h2><a class="link" href="${file}.html" target="_blank">Open full screen</a></div>
+    <p>${summary}</p>
+    <div class="phone"><div class="shell"><iframe title="${title}" data-file="${file}" loading="lazy" src="${file}.html?mode=${mode}"></iframe></div></div>
+    <dl>${Object.entries(notes).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+  </section>`).join('');
+const fit = () => document.querySelectorAll('.phone').forEach((p) => (p.firstElementChild.style.transform = `scale(${p.clientWidth / 864})`));
+addEventListener('resize', fit);
+fit();
+document.querySelectorAll('[data-all]').forEach((b) => b.addEventListener('click', () => {
+  mode = b.dataset.all;
+  document.querySelectorAll('[data-all]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.querySelectorAll('iframe').forEach((f) => (f.src = `${f.dataset.file}.html?mode=${mode}`));
+}));
+</script>
+</body>
+</html>
