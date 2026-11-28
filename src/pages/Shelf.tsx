@@ -4,7 +4,7 @@ import { GearIcon } from '../components/Icons';
 import { ModeButton } from '../components/ModeButton';
 import { LargeTitle } from '../components/NavBar';
 import { CoverShelf } from '../components/shelf/CoverShelf';
-import { CoverSlider } from '../components/shelf/CoverSlider';
+import { LandscapeShelf } from '../components/shelf/landscape/LandscapeShelf';
 import { SpineShelf } from '../components/shelf/SpineShelf';
 import { sampleRecords } from '../data/sample';
 import { allGenres, filterRecords, SORT_LABELS, sortRecords } from '../data/sort';
@@ -23,7 +23,11 @@ export function Shelf() {
 
   const genres = useMemo(() => allGenres(records), [records]);
   const filter = { ...view.filter, genre: genres.includes(view.filter.genre) ? view.filter.genre : '' };
-  const shown = sortRecords(filterRecords(records, filter), settings.sort);
+  // Kept between renders, because the sideways layouts redraw as you swipe.
+  const shown = useMemo(
+    () => sortRecords(filterRecords(records, { genre: filter.genre, specialOnly: filter.specialOnly }), settings.sort),
+    [records, filter.genre, filter.specialOnly, settings.sort],
+  );
   const selected = shown.find((r) => r.id === view.selected) ?? shown[0];
   useCoverTheme(useRecordColors(selected));
 
@@ -34,7 +38,8 @@ export function Shelf() {
 
   if (sideways && selected) {
     return (
-      <CoverSlider
+      <LandscapeShelf
+        layout={settings.landscapeLayout}
         records={shown}
         selectedId={selected.id}
         onSelect={select}

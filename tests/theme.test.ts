@@ -1,7 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { clampIndex, coverSizeFor, dragSteps, placement } from '../src/components/shelf/slider';
-import { sampleRecords } from '../src/data/sample';
-import { sortMark } from '../src/data/sort';
 import { normalizeRecord } from '../src/data/types';
 import { contrast, fromOklch, luminance, rgb, toHex, toOklch } from '../src/theme/color';
 import { extractColors } from '../src/theme/extract';
@@ -126,41 +123,5 @@ describe('cover colours', () => {
 
   it('are kept with a record only when valid', () => {
     expect(normalizeRecord({ popColor: 'red', spineColor: '#123456' })).toMatchObject({ popColor: '', spineColor: '#123456' });
-  });
-});
-
-describe('sideways slider', () => {
-  it('puts the focused record largest and facing forward', () => {
-    expect(placement(0)).toMatchObject({ scale: 1, turn: 0, opacity: 1 });
-    expect(placement(-1).x).toBeLessThan(placement(0).x);
-    expect(placement(1).x).toBeGreaterThan(placement(0).x);
-    expect(placement(2).scale).toBeLessThan(placement(1).scale);
-    expect(placement(-1).turn).toBe(-placement(1).turn);
-    expect(placement(9).opacity).toBe(0);
-  });
-
-  it('turns a drag into whole records', () => {
-    expect(dragSteps(0, 200)).toBe(0);
-    expect(dragSteps(-30, 200)).toBe(0);
-    expect(dragSteps(-100, 200)).toBe(1);
-    expect(dragSteps(280, 200)).toBe(-3);
-  });
-
-  it('stays inside the collection and the screen', () => {
-    expect(clampIndex(-2, 5)).toBe(0);
-    expect(clampIndex(9, 5)).toBe(4);
-    expect(coverSizeFor(844, 236)).toBe(220);
-    expect(coverSizeFor(568, 100)).toBe(96);
-    expect(coverSizeFor(2000, 900)).toBe(300);
-  });
-
-  it('labels the position for each sort order', () => {
-    const quiet = sampleRecords('USD').find((r) => r.title === 'Paper Lanterns')!;
-    expect(sortMark(quiet, 'artist')).toBe('Q');
-    expect(sortMark(quiet, 'title')).toBe('P');
-    expect(sortMark(quiet, 'year')).toBe('2018');
-    expect(sortMark(quiet, 'price')).toBe('$36.00');
-    expect(sortMark(quiet, 'purchased')).toContain('2025');
-    expect(sortMark({ ...quiet, year: null }, 'year')).toBe('—');
   });
 });

@@ -10,7 +10,7 @@ import { useRecordActions } from '../RecordMenu';
 import { useWidth } from './useWidth';
 
 const GAP = 3;
-const spineWidth = (r: VinylRecord) => 24 + (hash(r.id) % 5) + Math.min(8, (r.format.discs - 1) * 4);
+export const spineWidth = (r: VinylRecord) => 24 + (hash(r.id) % 5) + Math.min(8, (r.format.discs - 1) * 4);
 const spineHeight = (r: VinylRecord) => 160 + (hash(r.title) % 13);
 
 /** Fills each shelf from left to right with as many spines as fit. */

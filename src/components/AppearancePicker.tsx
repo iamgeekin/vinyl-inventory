@@ -18,11 +18,11 @@ export function AppearancePicker() {
       : themeFor(colors, appearance).bg;
 
   return (
-    <div className="appearance" role="radiogroup" aria-label="Appearance">
+    <div className="choices" role="radiogroup" aria-label="Appearance">
       {APPEARANCES.map((value) => (
         <label key={value}>
-          <span className="appearance-swatch" style={{ background: swatch(value) }} aria-hidden="true" />
-          <span className="appearance-text">
+          <span className="choice-swatch" style={{ background: swatch(value) }} aria-hidden="true" />
+          <span className="choice-text">
             <strong>{OPTIONS[value].label}</strong>
             <span className="muted small">{OPTIONS[value].hint}</span>
           </span>

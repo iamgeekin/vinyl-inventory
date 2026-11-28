@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppearancePicker } from '../components/AppearancePicker';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { NextIcon } from '../components/Icons';
+import { LandscapePicker } from '../components/LandscapePicker';
 import { BackButton, NavBar } from '../components/NavBar';
 import { SyncSettings } from '../components/SyncSettings';
 import { buildBackup, parseBackup, toCsv, type Backup } from '../data/backup';
@@ -88,6 +89,12 @@ export function Settings() {
           <h2>Appearance</h2>
           <AppearancePicker />
           <p className="muted small">The page takes its colours from the cover of the record in focus, in every mode.</p>
+        </section>
+
+        <section className="card">
+          <h2>Landscape layout</h2>
+          <LandscapePicker />
+          <p className="muted small">How the shelf looks with your phone held sideways.</p>
         </section>
 
         <section className="card">
